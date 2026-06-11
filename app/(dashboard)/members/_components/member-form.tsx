@@ -28,8 +28,8 @@ export function MemberForm() {
         await addMember(formData)
         toast.success("Thêm thành viên thành công")
         setOpen(false)
-      } catch (error: any) {
-        toast.error(error.message || "Có lỗi xảy ra")
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Có lỗi xảy ra")
       }
     })
   }

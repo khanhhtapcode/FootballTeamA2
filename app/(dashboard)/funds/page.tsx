@@ -2,18 +2,34 @@ import { db } from "@/lib/db"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { FundStatusSelect } from "./_components/fund-status-select"
 import { BulkFundForm } from "./_components/bulk-fund-form"
+import { YearSelect } from "./_components/year-select"
 import { Wallet } from "lucide-react"
+import { FUND_AMOUNT, FUND_STATUS, MEMBER_STATUS } from "@/lib/constants"
+import { ensureFundRecordsForYear } from "@/lib/actions/fund"
 
-const FUND_AMOUNT = 100000
-
-export default async function FundsPage() {
+export default async function FundsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ year?: string }>
+}) {
+  const { year: yearParam } = await searchParams
   const currentYear = new Date().getFullYear()
-  
+  const parsedYear = yearParam ? parseInt(yearParam) : currentYear
+  const year = Number.isNaN(parsedYear) ? currentYear : parsedYear
+
+  // Danh sách năm chọn được: 3 năm trước -> 1 năm sau (luôn bao gồm năm đang xem)
+  const yearSet = new Set<number>([year])
+  for (let y = currentYear - 3; y <= currentYear + 1; y++) yearSet.add(y)
+  const years = Array.from(yearSet).sort((a, b) => b - a)
+
+  // Tạo bù các bản ghi quỹ còn thiếu cho năm đang xem (idempotent)
+  await ensureFundRecordsForYear(year)
+
   const members = await db.member.findMany({
-    where: { status: { not: "Giải nghệ" } },
+    where: { status: { not: MEMBER_STATUS.RETIRED } },
     include: {
       fundRecords: {
-        where: { year: currentYear }
+        where: { year }
       }
     },
     orderBy: { createdAt: 'desc' }
@@ -28,12 +44,13 @@ export default async function FundsPage() {
             <Wallet className="w-6 h-6" />
           </div>
           <div>
-            <h1 className="text-3xl font-extrabold tracking-tight font-heading">Quỹ Hàng Tháng ({currentYear})</h1>
+            <h1 className="text-3xl font-extrabold tracking-tight font-heading">Quỹ Hàng Tháng ({year})</h1>
             <p className="text-sm text-muted-foreground mt-0.5">Theo dõi chi tiết thu chi đóng quỹ của các cầu thủ theo tháng</p>
           </div>
         </div>
-        <div>
-          <BulkFundForm members={members.map(m => ({ id: m.id, name: m.fullName }))} />
+        <div className="flex items-center gap-3">
+          <YearSelect years={years} selectedYear={year} />
+          <BulkFundForm year={year} members={members.map(m => ({ id: m.id, name: m.fullName }))} />
         </div>
       </div>
 
@@ -69,9 +86,9 @@ export default async function FundsPage() {
 
                   const monthsData = Array.from({ length: 12 }).map((_, i) => {
                     const record = records.find(r => r.month === i + 1)
-                    const status = record?.status || "—"
-                    if (status === "✅") totalPaid += FUND_AMOUNT
-                    if (status === "❌") totalDebt += FUND_AMOUNT
+                    const status = record?.status || FUND_STATUS.NOT_PARTICIPATING
+                    if (status === FUND_STATUS.PAID) totalPaid += FUND_AMOUNT
+                    if (status === FUND_STATUS.UNPAID) totalDebt += FUND_AMOUNT
                     return { month: i + 1, status }
                   })
 
@@ -81,11 +98,11 @@ export default async function FundsPage() {
                       <TableCell className="font-bold text-foreground border-r border-border">{member.fullName}</TableCell>
                       {monthsData.map((data) => (
                         <TableCell key={data.month} className="p-1 border-r border-border border-dashed">
-                          <FundStatusSelect 
-                            memberId={member.id} 
-                            month={data.month} 
-                            year={currentYear}
-                            currentStatus={data.status} 
+                          <FundStatusSelect
+                            memberId={member.id}
+                            month={data.month}
+                            year={year}
+                            currentStatus={data.status}
                           />
                         </TableCell>
                       ))}

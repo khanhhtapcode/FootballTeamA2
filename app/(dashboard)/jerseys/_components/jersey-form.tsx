@@ -28,8 +28,8 @@ export function JerseyForm({ members }: { members: { id: number, name: string }[
         await addJerseyOrder(formData)
         toast.success("Thêm đơn áo thành công")
         setOpen(false)
-      } catch (error: any) {
-        toast.error("Có lỗi xảy ra")
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Có lỗi xảy ra")
       }
     })
   }

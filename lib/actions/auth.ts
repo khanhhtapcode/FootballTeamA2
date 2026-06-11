@@ -2,17 +2,17 @@
 
 import { signIn, signOut } from "@/lib/auth"
 import { AuthError } from "next-auth"
-function isRedirectError(error: any): boolean {
+function isRedirectError(error: unknown): boolean {
   return (
-    error &&
+    !!error &&
     typeof error === "object" &&
     "digest" in error &&
-    typeof error.digest === "string" &&
-    error.digest.startsWith("NEXT_REDIRECT;")
+    typeof (error as { digest: unknown }).digest === "string" &&
+    (error as { digest: string }).digest.startsWith("NEXT_REDIRECT;")
   )
 }
 
-export async function authenticate(prevState: any, formData: FormData) {
+export async function authenticate(prevState: string | undefined, formData: FormData) {
   try {
     await signIn("credentials", formData, { redirectTo: "/" })
   } catch (error) {

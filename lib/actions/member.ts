@@ -3,18 +3,24 @@
 import { db } from "@/lib/db"
 import { revalidatePath } from "next/cache"
 import { auth } from "@/lib/auth"
+import { FUND_STATUS } from "@/lib/constants"
 
 export async function addMember(formData: FormData) {
   const session = await auth()
   if (!session?.user) throw new Error("Unauthorized")
 
-  const fullName = formData.get("fullName") as string
+  const fullName = (formData.get("fullName") as string)?.trim()
   const position = formData.get("position") as string || null
-  const jerseyNumber = formData.get("jerseyNumber") ? parseInt(formData.get("jerseyNumber") as string) : null
+  const jerseyRaw = formData.get("jerseyNumber") as string
+  const jerseyNumber = jerseyRaw ? parseInt(jerseyRaw) : null
   const phone = formData.get("phone") as string || null
 
   if (!fullName) {
     throw new Error("Tên thành viên không được để trống")
+  }
+
+  if (jerseyNumber !== null && Number.isNaN(jerseyNumber)) {
+    throw new Error("Số áo không hợp lệ")
   }
 
   // Check if member exists
@@ -41,9 +47,9 @@ export async function addMember(formData: FormData) {
   
   const fundRecords = []
   for (let month = 1; month <= 12; month++) {
-    let status = "—" // Không tham gia
+    let status: string = FUND_STATUS.NOT_PARTICIPATING
     if (month <= currentMonth) {
-      status = "❌" // Chưa đóng (các tháng đã qua và tháng hiện tại)
+      status = FUND_STATUS.UNPAID // Chưa đóng (các tháng đã qua và tháng hiện tại)
     }
 
     fundRecords.push({

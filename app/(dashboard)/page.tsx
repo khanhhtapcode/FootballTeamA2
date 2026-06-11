@@ -1,32 +1,40 @@
 import { db } from "@/lib/db"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Users, DollarSign, Calendar, Trophy, ArrowRight, TrendingUp, Landmark, CalendarDays } from "lucide-react"
+import { Users, DollarSign, Calendar, Trophy, ArrowRight, CalendarDays } from "lucide-react"
 import Link from "next/link"
 import { format } from "date-fns"
+import { FUND_AMOUNT, FUND_STATUS, MEMBER_STATUS } from "@/lib/constants"
 
 export default async function DashboardPage() {
-  const membersCount = await db.member.count()
-  
-  const matches = await db.match.findMany({
-    orderBy: { date: 'desc' }
-  })
-  const winsCount = matches.filter(m => m.result === "Thắng").length
-  const totalMatches = matches.length
+  // Chạy song song các truy vấn độc lập để giảm thời gian chờ
+  const [
+    membersCount,
+    winsCount,
+    totalMatches,
+    expenseAgg,
+    paidFundCount,
+    recentMatches,
+    upcomingSchedules,
+  ] = await Promise.all([
+    db.member.count({ where: { status: MEMBER_STATUS.ACTIVE } }),
+    db.match.count({ where: { result: "Thắng" } }),
+    db.match.count(),
+    db.expense.aggregate({
+      where: { source: "Quỹ đội" },
+      _sum: { amount: true },
+    }),
+    db.fundRecord.count({ where: { status: FUND_STATUS.PAID } }),
+    db.match.findMany({ orderBy: { date: "desc" }, take: 5 }),
+    db.schedule.findMany({
+      where: { date: { gte: new Date() } },
+      orderBy: { date: "asc" },
+      take: 5,
+    }),
+  ])
 
-  const expenses = await db.expense.findMany()
-  const totalExpense = expenses.filter(e => e.source === "Quỹ đội").reduce((acc, curr) => acc + curr.amount, 0)
-  
-  const fundRecords = await db.fundRecord.findMany({ where: { status: "✅" } })
-  // Assuming each paid fund is 100k
-  const totalFundReceived = fundRecords.length * 100000
-
+  const totalExpense = expenseAgg._sum.amount ?? 0
+  const totalFundReceived = paidFundCount * FUND_AMOUNT
   const currentBalance = totalFundReceived - totalExpense
-
-  const upcomingSchedules = await db.schedule.findMany({
-    where: { date: { gte: new Date() } },
-    orderBy: { date: 'asc' },
-    take: 5
-  })
 
   // Format date helper for banner
   const todayStr = format(new Date(), "eeee, 'ngày' dd 'tháng' MM, yyyy")
@@ -211,14 +219,14 @@ export default async function DashboardPage() {
             </Link>
           </CardHeader>
           <CardContent className="pt-6">
-            {matches.length === 0 ? (
+            {recentMatches.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground border border-dashed rounded-xl bg-muted/10">
                 <Trophy className="w-8 h-8 text-muted-foreground/40 mx-auto mb-2" />
                 <p className="text-sm">Chưa có kết quả trận đấu nào.</p>
               </div>
             ) : (
               <div className="space-y-4">
-                {matches.slice(0, 5).map(match => (
+                {recentMatches.map(match => (
                   <div key={match.id} className="flex items-center justify-between p-4 rounded-xl border border-border/80 bg-background/50 hover:border-primary/20 transition-all hover:shadow-sm">
                     <div className="flex items-center gap-4">
                       {/* Match outcome status indicator */}

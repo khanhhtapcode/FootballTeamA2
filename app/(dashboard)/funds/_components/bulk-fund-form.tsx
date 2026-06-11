@@ -16,7 +16,7 @@ import { toast } from "sonner"
 import { bulkUpdateFund } from "@/lib/actions/fund"
 import { Check, ClipboardList } from "lucide-react"
 
-export function BulkFundForm({ members }: { members: { id: number, name: string }[] }) {
+export function BulkFundForm({ year, members }: { year: number, members: { id: number, name: string }[] }) {
   const [open, setOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
   const [selectedMonth, setSelectedMonth] = useState((new Date().getMonth() + 1).toString())
@@ -25,8 +25,7 @@ export function BulkFundForm({ members }: { members: { id: number, name: string 
     startTransition(async () => {
       try {
         const month = parseInt(formData.get("month") as string)
-        const year = new Date().getFullYear()
-        
+
         const memberIds = members
           .filter(m => formData.get(`member_${m.id}`) === "on")
           .map(m => m.id)
@@ -39,8 +38,8 @@ export function BulkFundForm({ members }: { members: { id: number, name: string 
         await bulkUpdateFund(month, year, memberIds)
         toast.success(`Đã thu quỹ ${memberIds.length} người trong tháng ${month}`)
         setOpen(false)
-      } catch (error: any) {
-        toast.error("Có lỗi xảy ra")
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Có lỗi xảy ra")
       }
     })
   }

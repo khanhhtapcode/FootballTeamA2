@@ -9,7 +9,7 @@ export async function addMatch(formData: FormData) {
   if (!session?.user) throw new Error("Unauthorized")
 
   const date = new Date(formData.get("date") as string)
-  const opponent = formData.get("opponent") as string
+  const opponent = (formData.get("opponent") as string)?.trim()
   const location = formData.get("location") as string || null
   const score = formData.get("score") as string || null
   const result = formData.get("result") as string
@@ -17,6 +17,12 @@ export async function addMatch(formData: FormData) {
   const pitchFee = formData.get("pitchFee") ? parseInt(formData.get("pitchFee") as string) : 0
   const scorers = formData.get("scorers") as string || null
   const notes = formData.get("notes") as string || null
+
+  if (Number.isNaN(date.getTime())) throw new Error("Ngày thi đấu không hợp lệ")
+  if (!opponent) throw new Error("Tên đối thủ không được để trống")
+  if (!result) throw new Error("Chưa chọn kết quả trận đấu")
+  if (Number.isNaN(playersCount) || playersCount < 0) throw new Error("Số cầu thủ không hợp lệ")
+  if (Number.isNaN(pitchFee) || pitchFee < 0) throw new Error("Tiền sân không hợp lệ")
 
   const match = await db.match.create({
     data: {

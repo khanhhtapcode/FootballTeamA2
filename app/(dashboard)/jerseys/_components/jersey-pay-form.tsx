@@ -32,8 +32,8 @@ export function JerseyPayForm({ orderId, maxAmount }: { orderId: number, maxAmou
         await payJerseyOrder(orderId, amount)
         toast.success("Thu tiền áo thành công")
         setOpen(false)
-      } catch (error: any) {
-        toast.error("Có lỗi xảy ra")
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Có lỗi xảy ra")
       }
     })
   }

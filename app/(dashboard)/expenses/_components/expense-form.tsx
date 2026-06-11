@@ -28,8 +28,8 @@ export function ExpenseForm() {
         await addExpense(formData)
         toast.success("Thêm chi phí thành công")
         setOpen(false)
-      } catch (error: any) {
-        toast.error("Có lỗi xảy ra")
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Có lỗi xảy ra")
       }
     })
   }
