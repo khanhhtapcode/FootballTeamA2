@@ -1,0 +1,97 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Member {
+  id           Int           @id @default(autoincrement())
+  fullName     String        @unique
+  position     String?       // Thu mon, Hau ve, Tien ve, Tien dao, Da nang
+  jerseyNumber Int?
+  phone        String?
+  joinDate     DateTime      @default(now())
+  status       String        @default("Hoạt động") // Hoạt động, Tạm nghỉ, Giải nghệ
+  totalMatches Int           @default(0)
+  notes        String?
+  
+  fundRecords  FundRecord[]
+  jerseyOrders JerseyOrder[]
+  
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+}
+
+model FundRecord {
+  id          Int      @id @default(autoincrement())
+  memberId    Int
+  month       Int      // 1 to 12
+  year        Int      // e.g., 2026
+  status      String   // "✅", "❌", "—" (Đã đóng, Chưa đóng, Không tham gia)
+  
+  member      Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  
+  @@unique([memberId, month, year])
+}
+
+model Match {
+  id             Int       @id @default(autoincrement())
+  date           DateTime
+  opponent       String
+  location       String?
+  score          String?
+  result         String    // Thắng, Hòa, Thua
+  playersCount   Int
+  pitchFee       Int       @default(0)
+  scorers        String?   // comma separated or JSON
+  notes          String?
+  
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+model Expense {
+  id             Int       @id @default(autoincrement())
+  date           DateTime
+  category       String    // Tiền sân, Mua bóng, Trang phục, Nước uống, Đăng ký giải, Khác
+  description    String
+  amount         Int
+  spender        String?
+  source         String    // Quỹ đội, Tự túc, Tài trợ
+  notes          String?
+  
+  createdAt      DateTime  @default(now())
+}
+
+model JerseyOrder {
+  id             Int       @id @default(autoincrement())
+  memberId       Int
+  jerseyNumber   Int?
+  size           String?
+  description    String?   // Màu/Loại
+  quantity       Int       @default(1)
+  unitPrice      Int
+  paidAmount     Int       @default(0)
+  status         String    // Chưa trả, Trả một phần, Đã trả đủ, Miễn phí
+  notes          String?
+  
+  member         Member    @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+model Schedule {
+  id             Int       @id @default(autoincrement())
+  date           DateTime
+  opponent       String
+  location       String?
+  status         String    // Đã xác nhận, Chờ xác nhận, Đã hủy
+  notes          String?
+  
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}

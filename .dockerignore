@@ -1,0 +1,56 @@
+# Dependencies
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Next.js build output
+.next
+out
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Git
+.git
+.gitignore
+
+# IDE / Editor
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Docker
+docker-compose.yml
+Dockerfile
+.dockerignore
+
+# Documentation & misc
+README.md
+*.md
+LICENSE
+
+# Agent / AI config
+.agent
+
+# Gemini
+.gemini
+
+# TypeScript build info
+tsconfig.tsbuildinfo
+
+# Testing
+coverage
+.nyc_output
+
+# Turbopack
+.turbo
