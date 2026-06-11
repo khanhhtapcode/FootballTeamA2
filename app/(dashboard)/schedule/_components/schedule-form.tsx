@@ -13,14 +13,20 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Plus, CalendarDays } from "lucide-react"
+import { Plus, CalendarDays, CalendarIcon, Clock } from "lucide-react"
 import { addSchedule } from "@/lib/actions/schedule"
 import { useState, useTransition } from "react"
 import { toast } from "sonner"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Calendar } from "@/components/ui/calendar"
+import { format } from "date-fns"
+import { cn } from "@/lib/utils"
 
 export function ScheduleForm() {
   const [open, setOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
+  const [date, setDate] = useState<Date>(new Date())
+  const [time, setTime] = useState<string>("18:00")
 
   async function onSubmit(formData: FormData) {
     startTransition(async () => {
@@ -56,13 +62,43 @@ export function ScheduleForm() {
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="date" className="text-right text-sm font-semibold">Ngày giờ <span className="text-red-500">*</span></Label>
-              <Input 
-                id="date" 
-                name="date" 
-                type="datetime-local" 
-                className="col-span-3 h-10 border-border bg-background/50 focus:border-primary focus:ring-primary/20" 
-                required 
-              />
+              <div className="col-span-3 flex gap-2">
+                <Popover>
+                  <PopoverTrigger 
+                    render={
+                      <Button
+                        variant={"outline"}
+                        className={cn(
+                          "w-full justify-start text-left font-normal h-10 border-border bg-background/50 hover:bg-background/80 focus:border-primary flex-1",
+                          !date && "text-muted-foreground"
+                        )}
+                      />
+                    }
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {date ? format(date, "dd/MM/yyyy") : <span>Chọn ngày</span>}
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={date}
+                      onSelect={(d) => d && setDate(d)}
+                    />
+                  </PopoverContent>
+                </Popover>
+
+                <div className="relative w-32 shrink-0">
+                  <Input 
+                    type="time" 
+                    value={time}
+                    onChange={(e) => setTime(e.target.value)}
+                    className="h-10 border-border bg-background/50 focus:border-primary focus:ring-primary/20 w-full"
+                    required
+                  />
+                </div>
+                
+                <input type="hidden" name="date" value={`${date ? format(date, "yyyy-MM-dd") : ''}T${time}`} />
+              </div>
             </div>
             
             <div className="grid grid-cols-4 items-center gap-4">

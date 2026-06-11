@@ -13,14 +13,19 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Plus, Trophy } from "lucide-react"
+import { Plus, Trophy, CalendarIcon } from "lucide-react"
 import { addMatch } from "@/lib/actions/match"
 import { useState, useTransition } from "react"
 import { toast } from "sonner"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Calendar } from "@/components/ui/calendar"
+import { format } from "date-fns"
+import { cn } from "@/lib/utils"
 
 export function MatchForm() {
   const [open, setOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
+  const [date, setDate] = useState<Date>(new Date())
 
   async function onSubmit(formData: FormData) {
     startTransition(async () => {
@@ -56,14 +61,32 @@ export function MatchForm() {
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="date" className="text-right text-sm font-semibold">Ngày <span className="text-red-500">*</span></Label>
-              <Input 
-                id="date" 
-                name="date" 
-                type="date" 
-                className="col-span-3 h-10 border-border bg-background/50 focus:border-primary focus:ring-primary/20" 
-                required 
-                defaultValue={new Date().toISOString().split('T')[0]} 
-              />
+              <div className="col-span-3">
+                <Popover>
+                  <PopoverTrigger 
+                    render={
+                      <Button
+                        variant={"outline"}
+                        className={cn(
+                          "w-full justify-start text-left font-normal h-10 border-border bg-background/50 hover:bg-background/80 focus:border-primary",
+                          !date && "text-muted-foreground"
+                        )}
+                      />
+                    }
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {date ? format(date, "dd/MM/yyyy") : <span>Chọn ngày</span>}
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={date}
+                      onSelect={(d) => d && setDate(d)}
+                    />
+                  </PopoverContent>
+                </Popover>
+                <input type="hidden" name="date" value={date ? date.toISOString().split('T')[0] : ''} />
+              </div>
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="opponent" className="text-right text-sm font-semibold">Đối thủ <span className="text-red-500">*</span></Label>
