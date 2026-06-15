@@ -15,7 +15,6 @@ model Member {
   phone        String?
   joinDate     DateTime      @default(now())
   status       String        @default("Hoạt động") // Hoạt động, Tạm nghỉ, Giải nghệ
-  totalMatches Int           @default(0)
   notes        String?
   
   fundRecords  FundRecord[]

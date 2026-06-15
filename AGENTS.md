@@ -5,6 +5,89 @@
 
 ---
 
+## 0. KIẾN TRÚC THỰC TẾ CỦA DỰ ÁN NÀY (ƯU TIÊN CAO NHẤT)
+
+> ⚠️ Dự án này **KHÔNG dùng Server Actions cho mutation**. Đã migrate sang **REST API + Service Layer**.
+> Khi có mâu thuẫn, mục 0 này **ghi đè** Mục 5 (Server Actions) bên dưới — Mục 5 chỉ giữ làm tham khảo lý thuyết.
+
+### 0.1 Luồng dữ liệu
+
+- **ĐỌC dữ liệu**: Server Component gọi `db` (Prisma) **trực tiếp** trong `page.tsx`. Không tạo `GET` route, không `fetch` ở client.
+- **GHI dữ liệu (create/update)**: Client Component → `apiFetch()` → **Route Handler** (`app/api/.../route.ts`) → **Service** (`lib/services/*`) → Prisma.
+
+### 0.2 Phân tầng (bắt buộc tuân thủ)
+
+| Tầng | File | Trách nhiệm |
+| ---- | ---- | ----------- |
+| **Route Handler** | `app/api/<resource>/route.ts` | Chỉ lo HTTP: `requireAuth()` → đọc body → gọi service → `revalidatePath()` → `ok()`. Bọc toàn bộ trong `try/catch` → `handleError(error)`. **KHÔNG** chứa logic nghiệp vụ. |
+| **Service** | `lib/services/<resource>-service.ts` | Toàn bộ logic nghiệp vụ + validation. Ném `ApiError(status, message)` khi dữ liệu sai. Trả về entity. |
+| **Helper API** | `lib/api.ts` | `ApiError`, `requireAuth()`, `ok()`, `handleError()`. |
+| **Client helper** | `lib/api-client.ts` | `apiFetch(url, { method, body })` — tự serialize JSON, ném `Error(message)` khi response không OK. |
+| **Hằng số** | `lib/constants.ts` | `FUND_AMOUNT`, `FUND_STATUS`, `MEMBER_STATUS`... Không hardcode magic value/chuỗi trạng thái rải rác. |
+
+### 0.3 Quy tắc Route Handler
+
+```ts
+// app/api/members/route.ts
+import { NextRequest } from "next/server"
+import { revalidatePath } from "next/cache"
+import { requireAuth, ok, handleError } from "@/lib/api"
+import { createMember } from "@/lib/services/member-service"
+
+export async function POST(request: NextRequest) {
+  try {
+    await requireAuth()                  // 1. Bắt buộc xác thực
+    const body = await request.json()    // 2. Đọc body
+    const member = await createMember(body) // 3. Gọi service (validation + nghiệp vụ ở đây)
+    revalidatePath("/members")           // 4. Revalidate path liên quan
+    return ok(member, 201)               // 5. Trả 201 cho create
+  } catch (error) {
+    return handleError(error)            // Map ApiError -> status, còn lại 500
+  }
+}
+```
+
+### 0.4 Quy tắc Service
+
+- Mọi validation (NaN, Invalid Date, range, trùng lặp) nằm ở service, ném `ApiError(400/404/409, "...")`.
+- Service là hàm thuần (không `"use server"`, không `revalidatePath` — đó là việc của route).
+- Service có thể được gọi trực tiếp từ Server Component khi cần (vd `ensureFundRecordsForYear`).
+
+### 0.5 Quy tắc Client form
+
+```tsx
+"use client"
+import { apiFetch } from "@/lib/api-client"
+import { useRouter } from "next/navigation"
+import { useTransition } from "react"
+import { toast } from "sonner"
+
+const router = useRouter()
+const [isPending, startTransition] = useTransition()
+
+async function onSubmit(formData: FormData) {
+  startTransition(async () => {
+    try {
+      await apiFetch("/api/members", { method: "POST", body: { /* ... */ } })
+      toast.success("Thành công")
+      router.refresh()  // Cập nhật lại Server Component sau mutation
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Có lỗi xảy ra")
+    }
+  })
+}
+```
+
+- Luôn bắt lỗi bằng `error instanceof Error` — **KHÔNG** dùng `catch (error: any)`.
+- Sau mutation gọi `router.refresh()` để làm tươi dữ liệu.
+
+### 0.6 Auth
+
+- Hệ thống dùng **1 tài khoản superadmin** qua env (`ADMIN_USERNAME`/`ADMIN_PASSWORD`), NextAuth Credentials. Không có self-register/đa người dùng.
+- Middleware đã chặn toàn bộ route (trừ `/login`, static). Route handler vẫn phải `requireAuth()` để chặn gọi API trực tiếp.
+
+---
+
 ## 1. PROJECT STRUCTURE
 
 ### 1.1 Cấu trúc thư mục chuẩn
@@ -41,6 +124,31 @@ my-app/
 ├── package.json
 └── .env.local
 ```
+
+> Sơ đồ trên là ví dụ chuẩn Next.js tổng quát. **Cấu trúc thực tế của dự án này** (xem Mục 0):
+>
+> ```
+> app/
+> ├── (dashboard)/                 # Route group — các trang quản trị (đọc db trực tiếp)
+> │   ├── members/page.tsx
+> │   ├── members/_components/*.tsx # Form client gọi apiFetch
+> │   ├── funds/ matches/ expenses/ jerseys/ schedule/
+> │   ├── layout.tsx  loading.tsx  error.tsx
+> │   └── page.tsx                  # Dashboard tổng quan
+> ├── api/                         # REST API cho MUTATION (POST/PATCH)
+> │   ├── members/route.ts  members/[id]/route.ts
+> │   ├── funds/route.ts  funds/bulk/route.ts
+> │   ├── matches/ expenses/ jerseys/ schedules/
+> │   └── auth/[...nextauth]/route.ts
+> └── login/page.tsx
+> lib/
+> ├── api.ts            # ApiError, requireAuth, ok, handleError
+> ├── api-client.ts     # apiFetch (client)
+> ├── services/*.ts     # Logic nghiệp vụ + validation
+> ├── constants.ts      # FUND_AMOUNT, FUND_STATUS, MEMBER_STATUS
+> ├── auth.ts  db.ts  utils.ts
+> └── actions/auth.ts   # signIn/signOut (auth là ngoại lệ vẫn dùng Server Action)
+> ```
 
 ### 1.2 Quy tắc đặt tên thư mục
 
@@ -280,6 +388,9 @@ fetch(url, { next: { tags: ["posts"] } }); // Tag-based revalidation
 ---
 
 ## 5. SERVER ACTIONS (MUTATING DATA)
+
+> ⚠️ **CHỈ THAM KHẢO LÝ THUYẾT.** Dự án này đã migrate mutation sang REST API + Service Layer — xem **Mục 0**.
+> Khi viết code mutation mới, **làm theo Mục 0**, không tạo Server Action mới (ngoại lệ duy nhất: `signIn`/`signOut` trong `lib/actions/auth.ts`).
 
 ### 5.1 Quy tắc bắt buộc
 

@@ -39,14 +39,13 @@ export default async function MembersPage() {
                 <TableHead className="font-bold text-foreground">Số áo</TableHead>
                 <TableHead className="font-bold text-foreground">SĐT</TableHead>
                 <TableHead className="font-bold text-foreground">Ngày tham gia</TableHead>
-                <TableHead className="text-center font-bold text-foreground">Tổng trận</TableHead>
                 <TableHead className="w-44 font-bold text-foreground">Trạng thái</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {members.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center h-32 text-muted-foreground">
+                  <TableCell colSpan={7} className="text-center h-32 text-muted-foreground">
                     Chưa có thành viên nào. Hãy thêm thành viên đầu tiên!
                   </TableCell>
                 </TableRow>
@@ -68,9 +67,6 @@ export default async function MembersPage() {
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
                       {new Date(member.joinDate).toLocaleDateString('vi-VN')}
-                    </TableCell>
-                    <TableCell className="text-center font-bold text-foreground bg-muted/10">
-                      {member.totalMatches}
                     </TableCell>
                     <TableCell className="py-2.5">
                       <MemberStatusSelect id={member.id} currentStatus={member.status} />
