@@ -2,6 +2,7 @@ import { db } from "@/lib/db"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { MemberForm } from "./_components/member-form"
 import { MemberStatusSelect } from "./_components/member-status-select"
+import { MemberLineupSelect } from "./_components/member-lineup-select"
 import { Users, LayoutGrid, List, Phone, Calendar, Shirt, Eye } from "lucide-react"
 import Link from "next/link"
 
@@ -180,8 +181,15 @@ export default async function MembersPage({ searchParams }: Props) {
                     </span>
                   )}
 
-                  <div className="pt-2 border-t border-border/40">
-                    <MemberStatusSelect id={member.id} currentStatus={member.status} />
+                  <div className="pt-2 border-t border-border/40 space-y-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-[10px] font-mono text-muted-foreground uppercase">Trạng thái</span>
+                      <MemberStatusSelect id={member.id} currentStatus={member.status} />
+                    </div>
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-[10px] font-mono text-muted-foreground uppercase">Đội hình chính</span>
+                      <MemberLineupSelect id={member.id} currentLineupPosition={member.lineupPosition} />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -201,6 +209,7 @@ export default async function MembersPage({ searchParams }: Props) {
                   <TableHead className="font-bold text-foreground text-center">Số áo</TableHead>
                   <TableHead className="font-bold text-foreground">Số điện thoại</TableHead>
                   <TableHead className="font-bold text-foreground">Ngày tham gia</TableHead>
+                  <TableHead className="w-44 font-bold text-foreground text-center">Đội hình chính</TableHead>
                   <TableHead className="w-44 font-bold text-foreground text-right">Trạng thái</TableHead>
                 </TableRow>
               </TableHeader>
@@ -231,6 +240,11 @@ export default async function MembersPage({ searchParams }: Props) {
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground font-medium">
                         {new Date(member.joinDate).toLocaleDateString('vi-VN')}
+                      </TableCell>
+                      <TableCell className="py-2.5 text-center">
+                        <div className="flex justify-center">
+                          <MemberLineupSelect id={member.id} currentLineupPosition={member.lineupPosition} />
+                        </div>
                       </TableCell>
                       <TableCell className="flex justify-end py-2.5">
                         <MemberStatusSelect id={member.id} currentStatus={member.status} />

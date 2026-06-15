@@ -62,3 +62,21 @@ export async function updateMemberStatus(id: number, status: string) {
 
   return db.member.update({ where: { id }, data: { status } })
 }
+
+export async function updateMemberLineup(id: number, lineupPosition: string | null) {
+  if (Number.isNaN(id)) throw new ApiError(400, "ID thành viên không hợp lệ")
+
+  // Nếu gán vào một vị trí cụ thể, xoá vị trí đó khỏi các cầu thủ khác trước để tránh trùng lặp
+  if (lineupPosition) {
+    await db.member.updateMany({
+      where: { lineupPosition },
+      data: { lineupPosition: null }
+    })
+  }
+
+  return db.member.update({
+    where: { id },
+    data: { lineupPosition }
+  })
+}
+

@@ -4,6 +4,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { format } from "date-fns"
 import { FUND_AMOUNT, FUND_STATUS, MEMBER_STATUS } from "@/lib/constants"
+import { TacticalBoard } from "./_components/tactical-board"
 
 export default async function DashboardPage() {
   // Chạy song song các truy vấn độc lập
@@ -16,6 +17,7 @@ export default async function DashboardPage() {
     recentMatches,
     upcomingSchedules,
     allMatchesForScorers,
+    activeMembers,
   ] = await Promise.all([
     db.member.count({ where: { status: MEMBER_STATUS.ACTIVE } }),
     db.match.count({ where: { result: "Thắng" } }),
@@ -34,6 +36,17 @@ export default async function DashboardPage() {
     db.match.findMany({
       where: { NOT: { scorers: null } },
       select: { scorers: true },
+    }),
+    db.member.findMany({
+      where: { status: MEMBER_STATUS.ACTIVE },
+      select: {
+        id: true,
+        fullName: true,
+        jerseyNumber: true,
+        lineupPosition: true,
+        position: true,
+      },
+      orderBy: { fullName: "asc" },
     }),
   ])
 
@@ -175,76 +188,8 @@ export default async function DashboardPage() {
         {/* Left Column Area: Tactical Board & Fixtures logs (2/3 width) */}
         <div className="lg:col-span-2 space-y-8">
           
-          {/* Bento Visual Diversity Block: High-contrast Mini CSS Tactical Board */}
-          <div className="rounded-2xl border border-white/5 bg-card/20 backdrop-blur-md p-6 space-y-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] relative overflow-hidden">
-            <div className="flex items-center justify-between z-10 relative">
-              <div className="space-y-1">
-                <span className="text-xs font-mono tracking-widest text-muted-foreground uppercase flex items-center gap-1.5">
-                  <Settings className="w-3.5 h-3.5 text-primary animate-spin-slow" />
-                  // BẢN ĐỒ CHIẾN THUẬT ĐỘI HÌNH
-                </span>
-                <p className="text-[10px] text-muted-foreground font-mono uppercase">Sơ đồ bố trí chiến thuật chuẩn 3-2-1 sân 7</p>
-              </div>
-              <span className="text-[9px] bg-primary/10 border border-primary/20 text-primary px-2 py-0.5 rounded font-mono font-bold">TACTICS BOARD</span>
-            </div>
-
-            {/* CSS football pitch drawing */}
-            <div className="relative w-full aspect-[2/1] bg-emerald-950/20 border border-white/10 rounded-xl overflow-hidden mt-4 shadow-inner">
-              {/* Pitch Outer Circle & markings */}
-              <div className="absolute inset-2 border border-white/5 rounded-sm" />
-              <div className="absolute top-2 bottom-2 left-1/2 border-l border-white/5" />
-              <div className="absolute w-20 h-20 rounded-full border border-white/5 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
-              <div className="absolute w-1.5 h-1.5 rounded-full bg-white/10 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
-
-              {/* Penalty boxes */}
-              <div className="absolute left-2 top-1/2 -translate-y-1/2 w-12 h-24 border-y border-r border-white/5" />
-              <div className="absolute right-2 top-1/2 -translate-y-1/2 w-12 h-24 border-y border-l border-white/5" />
-
-              {/* Goalposts outlines */}
-              <div className="absolute left-0 top-1/2 -translate-y-1/2 w-2 h-10 border-y border-r border-white/10 bg-white/5" />
-              <div className="absolute right-0 top-1/2 -translate-y-1/2 w-2 h-10 border-y border-l border-white/10 bg-white/5" />
-
-              {/* Player dots - color coded by position (GK: Sky, DF: Teal, MF: Emerald, FW: Gold) */}
-              {/* GK */}
-              <div className="absolute left-6 top-1/2 -translate-y-1/2 flex flex-col items-center">
-                <div className="w-4 h-4 rounded-full bg-sky-500 border border-white shadow-[0_0_10px_#0ea5e9] animate-pulse" />
-                <span className="text-[7px] text-white/50 font-mono mt-0.5">GK</span>
-              </div>
-
-              {/* DF left */}
-              <div className="absolute left-20 top-[28%] flex flex-col items-center">
-                <div className="w-4 h-4 rounded-full bg-teal-500 border border-white shadow-[0_0_10px_#14b8a6]" />
-                <span className="text-[7px] text-white/50 font-mono mt-0.5">DF</span>
-              </div>
-              {/* DF right */}
-              <div className="absolute left-20 top-[72%] flex flex-col items-center">
-                <div className="w-4 h-4 rounded-full bg-teal-500 border border-white shadow-[0_0_10px_#14b8a6]" />
-                <span className="text-[7px] text-white/50 font-mono mt-0.5">DF</span>
-              </div>
-              {/* DF center */}
-              <div className="absolute left-24 top-1/2 -translate-y-1/2 flex flex-col items-center">
-                <div className="w-4 h-4 rounded-full bg-teal-500 border border-white shadow-[0_0_10px_#14b8a6]" />
-                <span className="text-[7px] text-white/50 font-mono mt-0.5">CB</span>
-              </div>
-
-              {/* MF center left */}
-              <div className="absolute left-[40%] top-[30%] flex flex-col items-center">
-                <div className="w-4 h-4 rounded-full bg-emerald-500 border border-white shadow-[0_0_10px_#10b981]" />
-                <span className="text-[7px] text-white/50 font-mono mt-0.5">LM</span>
-              </div>
-              {/* MF center right */}
-              <div className="absolute left-[40%] top-[70%] flex flex-col items-center">
-                <div className="w-4 h-4 rounded-full bg-emerald-500 border border-white shadow-[0_0_10px_#10b981]" />
-                <span className="text-[7px] text-white/50 font-mono mt-0.5">RM</span>
-              </div>
-
-              {/* FW */}
-              <div className="absolute right-24 top-1/2 -translate-y-1/2 flex flex-col items-center">
-                <div className="w-4 h-4 rounded-full bg-accent border border-white shadow-[0_0_10px_#eab308] animate-pulse" />
-                <span className="text-[7px] text-white/50 font-mono mt-0.5">ST</span>
-              </div>
-            </div>
-          </div>
+          {/* Bento Visual Diversity Block: Interactive CSS Tactical Board */}
+          <TacticalBoard activeMembers={activeMembers} />
 
           {/* Card: Upcoming Fixtures */}
           <div className="rounded-2xl border border-white/5 bg-card/20 backdrop-blur-md p-6 space-y-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
