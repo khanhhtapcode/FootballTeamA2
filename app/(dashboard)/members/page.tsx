@@ -145,7 +145,10 @@ export default async function MembersPage({ searchParams }: Props) {
               >
                 {/* Huge varsity background jersey number */}
                 {member.jerseyNumber !== null && (
-                  <div className="absolute top-6 right-2 text-primary/8 font-black varsity-font text-8xl pointer-events-none select-none">
+                  <div 
+                    className="absolute right-2 text-primary/8 font-black varsity-font text-8xl pointer-events-none select-none animate-fade-in"
+                    style={{ top: '1.5rem', bottom: 'auto' }}
+                  >
                     {member.jerseyNumber}
                   </div>
                 )}
