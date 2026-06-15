@@ -2,7 +2,6 @@ import { db } from "@/lib/db"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { MemberForm } from "./_components/member-form"
 import { MemberStatusSelect } from "./_components/member-status-select"
-import { MemberLineupSelect } from "./_components/member-lineup-select"
 import { Users, LayoutGrid, List, Phone, Calendar, Shirt } from "lucide-react"
 import Link from "next/link"
 import { MEMBER_POSITIONS } from "@/lib/constants"
@@ -153,18 +152,10 @@ export default async function MembersPage({ searchParams }: Props) {
 
                 {/* Top content */}
                 <div className="space-y-3 relative z-10">
-                  <div className="flex items-start justify-between">
+                  <div className="flex items-start">
                     <span className={`px-2.5 py-0.5 text-[10px] uppercase font-black tracking-wider rounded-md border ${posBadgeColor}`}>
                       {member.position || "UT"}
                     </span>
-                    {member.jerseyNumber !== null ? (
-                      <span className="flex items-center gap-0.5 text-xs font-black text-primary">
-                        <Shirt className="w-3.5 h-3.5" />
-                        #{member.jerseyNumber}
-                      </span>
-                    ) : (
-                      <span className="text-xs text-muted-foreground">N/A</span>
-                    )}
                   </div>
                   
                   <div>
@@ -193,15 +184,16 @@ export default async function MembersPage({ searchParams }: Props) {
                     </span>
                   )}
 
-                  <div className="pt-2 border-t border-border/40 space-y-2">
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-[10px] font-mono text-muted-foreground uppercase">Trạng thái</span>
-                      <MemberStatusSelect id={member.id} currentStatus={member.status} />
-                    </div>
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-[10px] font-mono text-muted-foreground uppercase">Đội hình chính</span>
-                      <MemberLineupSelect id={member.id} currentLineupPosition={member.lineupPosition} />
-                    </div>
+                  <div className="pt-2 border-t border-border/40 flex items-center justify-between gap-2">
+                    <MemberStatusSelect id={member.id} currentStatus={member.status} />
+                    {member.jerseyNumber !== null ? (
+                      <span className="flex items-center gap-1 h-8 px-2.5 text-xs font-black text-primary bg-primary/10 border border-primary/20 rounded-full shrink-0">
+                        <Shirt className="w-3.5 h-3.5" />
+                        #{member.jerseyNumber}
+                      </span>
+                    ) : (
+                      <span className="text-xs text-muted-foreground font-semibold h-8 flex items-center px-2 shrink-0">N/A</span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -221,7 +213,6 @@ export default async function MembersPage({ searchParams }: Props) {
                   <TableHead className="font-bold text-foreground text-center">Số áo</TableHead>
                   <TableHead className="font-bold text-foreground">Số điện thoại</TableHead>
                   <TableHead className="font-bold text-foreground">Ngày tham gia</TableHead>
-                  <TableHead className="w-44 font-bold text-foreground text-center">Đội hình chính</TableHead>
                   <TableHead className="w-44 font-bold text-foreground text-right">Trạng thái</TableHead>
                 </TableRow>
               </TableHeader>
@@ -252,11 +243,6 @@ export default async function MembersPage({ searchParams }: Props) {
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground font-medium">
                         {new Date(member.joinDate).toLocaleDateString('vi-VN')}
-                      </TableCell>
-                      <TableCell className="py-2.5 text-center">
-                        <div className="flex justify-center">
-                          <MemberLineupSelect id={member.id} currentLineupPosition={member.lineupPosition} />
-                        </div>
                       </TableCell>
                       <TableCell className="flex justify-end py-2.5">
                         <MemberStatusSelect id={member.id} currentStatus={member.status} />
