@@ -5,7 +5,7 @@ import { BulkFundForm } from "./_components/bulk-fund-form"
 import { YearSelect } from "./_components/year-select"
 import { Wallet } from "lucide-react"
 import { FUND_AMOUNT, FUND_STATUS, MEMBER_STATUS } from "@/lib/constants"
-import { ensureFundRecordsForYear } from "@/lib/actions/fund"
+import { ensureFundRecordsForYear } from "@/lib/services/fund-service"
 
 export default async function FundsPage({
   searchParams,

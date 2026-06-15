@@ -14,20 +14,31 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Plus, UserPlus } from "lucide-react"
-import { addMember } from "@/lib/actions/member"
+import { apiFetch } from "@/lib/api-client"
 import { useState, useTransition } from "react"
+import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 
 export function MemberForm() {
   const [open, setOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
+  const router = useRouter()
 
   async function onSubmit(formData: FormData) {
     startTransition(async () => {
       try {
-        await addMember(formData)
+        await apiFetch("/api/members", {
+          method: "POST",
+          body: {
+            fullName: formData.get("fullName"),
+            position: formData.get("position"),
+            jerseyNumber: formData.get("jerseyNumber"),
+            phone: formData.get("phone"),
+          },
+        })
         toast.success("Thêm thành viên thành công")
         setOpen(false)
+        router.refresh()
       } catch (error) {
         toast.error(error instanceof Error ? error.message : "Có lỗi xảy ra")
       }

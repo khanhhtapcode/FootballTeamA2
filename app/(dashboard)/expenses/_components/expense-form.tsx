@@ -14,8 +14,9 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Plus, Receipt, CalendarIcon } from "lucide-react"
-import { addExpense } from "@/lib/actions/expense"
+import { apiFetch } from "@/lib/api-client"
 import { useState, useTransition } from "react"
+import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Calendar } from "@/components/ui/calendar"
@@ -26,13 +27,26 @@ export function ExpenseForm() {
   const [open, setOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
   const [date, setDate] = useState<Date>(new Date())
+  const router = useRouter()
 
   async function onSubmit(formData: FormData) {
     startTransition(async () => {
       try {
-        await addExpense(formData)
+        await apiFetch("/api/expenses", {
+          method: "POST",
+          body: {
+            date: formData.get("date"),
+            category: formData.get("category"),
+            description: formData.get("description"),
+            amount: formData.get("amount"),
+            spender: formData.get("spender"),
+            source: formData.get("source"),
+            notes: formData.get("notes"),
+          },
+        })
         toast.success("Thêm chi phí thành công")
         setOpen(false)
+        router.refresh()
       } catch (error) {
         toast.error(error instanceof Error ? error.message : "Có lỗi xảy ra")
       }

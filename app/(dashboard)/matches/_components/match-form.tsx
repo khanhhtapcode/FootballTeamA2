@@ -14,8 +14,9 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Plus, Trophy, CalendarIcon } from "lucide-react"
-import { addMatch } from "@/lib/actions/match"
+import { apiFetch } from "@/lib/api-client"
 import { useState, useTransition } from "react"
+import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Calendar } from "@/components/ui/calendar"
@@ -26,13 +27,27 @@ export function MatchForm() {
   const [open, setOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
   const [date, setDate] = useState<Date>(new Date())
+  const router = useRouter()
 
   async function onSubmit(formData: FormData) {
     startTransition(async () => {
       try {
-        await addMatch(formData)
+        await apiFetch("/api/matches", {
+          method: "POST",
+          body: {
+            date: formData.get("date"),
+            opponent: formData.get("opponent"),
+            location: formData.get("location"),
+            score: formData.get("score"),
+            result: formData.get("result"),
+            playersCount: formData.get("playersCount"),
+            pitchFee: formData.get("pitchFee"),
+            scorers: formData.get("scorers"),
+          },
+        })
         toast.success("Thêm trận đấu thành công")
         setOpen(false)
+        router.refresh()
       } catch (error) {
         toast.error(error instanceof Error ? error.message : "Có lỗi xảy ra")
       }

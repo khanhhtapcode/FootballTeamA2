@@ -13,9 +13,10 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Plus, CalendarDays, CalendarIcon, Clock } from "lucide-react"
-import { addSchedule } from "@/lib/actions/schedule"
+import { Plus, CalendarDays, CalendarIcon } from "lucide-react"
+import { apiFetch } from "@/lib/api-client"
 import { useState, useTransition } from "react"
+import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Calendar } from "@/components/ui/calendar"
@@ -27,13 +28,24 @@ export function ScheduleForm() {
   const [isPending, startTransition] = useTransition()
   const [date, setDate] = useState<Date>(new Date())
   const [time, setTime] = useState<string>("18:00")
+  const router = useRouter()
 
   async function onSubmit(formData: FormData) {
     startTransition(async () => {
       try {
-        await addSchedule(formData)
+        await apiFetch("/api/schedules", {
+          method: "POST",
+          body: {
+            date: formData.get("date"),
+            opponent: formData.get("opponent"),
+            location: formData.get("location"),
+            status: formData.get("status"),
+            notes: formData.get("notes"),
+          },
+        })
         toast.success("Thêm lịch thi đấu thành công")
         setOpen(false)
+        router.refresh()
       } catch (error) {
         toast.error(error instanceof Error ? error.message : "Có lỗi xảy ra")
       }

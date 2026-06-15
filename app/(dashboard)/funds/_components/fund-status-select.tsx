@@ -1,20 +1,26 @@
 "use client"
 
-import { updateFundStatus } from "@/lib/actions/fund"
+import { apiFetch } from "@/lib/api-client"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useTransition } from "react"
+import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 
 export function FundStatusSelect({ memberId, month, year, currentStatus }: { memberId: number, month: number, year: number, currentStatus: string }) {
   const [isPending, startTransition] = useTransition()
+  const router = useRouter()
 
   function handleStatusChange(value: string | null) {
     if (!value) return;
     startTransition(async () => {
       try {
-        await updateFundStatus(memberId, month, year, value)
+        await apiFetch("/api/funds", {
+          method: "PATCH",
+          body: { memberId, month, year, status: value },
+        })
+        router.refresh()
       } catch (e) {
-        toast.error("Lỗi khi cập nhật quỹ")
+        toast.error(e instanceof Error ? e.message : "Lỗi khi cập nhật quỹ")
       }
     })
   }

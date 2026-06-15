@@ -14,20 +14,34 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Plus, Shirt } from "lucide-react"
-import { addJerseyOrder } from "@/lib/actions/jersey"
+import { apiFetch } from "@/lib/api-client"
 import { useState, useTransition } from "react"
+import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 
 export function JerseyForm({ members }: { members: { id: number, name: string }[] }) {
   const [open, setOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
+  const router = useRouter()
 
   async function onSubmit(formData: FormData) {
     startTransition(async () => {
       try {
-        await addJerseyOrder(formData)
+        await apiFetch("/api/jerseys", {
+          method: "POST",
+          body: {
+            memberId: formData.get("memberId"),
+            jerseyNumber: formData.get("jerseyNumber"),
+            size: formData.get("size"),
+            description: formData.get("description"),
+            quantity: formData.get("quantity"),
+            unitPrice: formData.get("unitPrice"),
+            isFree: formData.get("isFree") === "on",
+          },
+        })
         toast.success("Thêm đơn áo thành công")
         setOpen(false)
+        router.refresh()
       } catch (error) {
         toast.error(error instanceof Error ? error.message : "Có lỗi xảy ra")
       }

@@ -13,13 +13,15 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Wallet } from "lucide-react"
-import { payJerseyOrder } from "@/lib/actions/jersey"
+import { apiFetch } from "@/lib/api-client"
 import { useState, useTransition } from "react"
+import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 
 export function JerseyPayForm({ orderId, maxAmount }: { orderId: number, maxAmount: number }) {
   const [open, setOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
+  const router = useRouter()
 
   async function onSubmit(formData: FormData) {
     startTransition(async () => {
@@ -29,9 +31,13 @@ export function JerseyPayForm({ orderId, maxAmount }: { orderId: number, maxAmou
           toast.error("Số tiền thu lớn hơn số nợ")
           return
         }
-        await payJerseyOrder(orderId, amount)
+        await apiFetch(`/api/jerseys/${orderId}/payments`, {
+          method: "POST",
+          body: { amount },
+        })
         toast.success("Thu tiền áo thành công")
         setOpen(false)
+        router.refresh()
       } catch (error) {
         toast.error(error instanceof Error ? error.message : "Có lỗi xảy ra")
       }

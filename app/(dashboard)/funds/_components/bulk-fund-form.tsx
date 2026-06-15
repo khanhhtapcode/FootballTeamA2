@@ -12,14 +12,16 @@ import {
 } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useState, useTransition } from "react"
+import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-import { bulkUpdateFund } from "@/lib/actions/fund"
+import { apiFetch } from "@/lib/api-client"
 import { Check, ClipboardList } from "lucide-react"
 
 export function BulkFundForm({ year, members }: { year: number, members: { id: number, name: string }[] }) {
   const [open, setOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
   const [selectedMonth, setSelectedMonth] = useState((new Date().getMonth() + 1).toString())
+  const router = useRouter()
 
   async function onSubmit(formData: FormData) {
     startTransition(async () => {
@@ -35,9 +37,13 @@ export function BulkFundForm({ year, members }: { year: number, members: { id: n
           return
         }
 
-        await bulkUpdateFund(month, year, memberIds)
+        await apiFetch("/api/funds/bulk", {
+          method: "POST",
+          body: { month, year, memberIds },
+        })
         toast.success(`Đã thu quỹ ${memberIds.length} người trong tháng ${month}`)
         setOpen(false)
+        router.refresh()
       } catch (error) {
         toast.error(error instanceof Error ? error.message : "Có lỗi xảy ra")
       }

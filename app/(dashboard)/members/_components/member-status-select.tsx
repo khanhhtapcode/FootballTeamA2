@@ -1,21 +1,24 @@
 "use client"
 
-import { updateMemberStatus } from "@/lib/actions/member"
+import { apiFetch } from "@/lib/api-client"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useTransition } from "react"
+import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 
 export function MemberStatusSelect({ id, currentStatus }: { id: number, currentStatus: string }) {
   const [isPending, startTransition] = useTransition()
+  const router = useRouter()
 
   function handleStatusChange(value: string | null) {
     if (!value) return;
     startTransition(async () => {
       try {
-        await updateMemberStatus(id, value)
+        await apiFetch(`/api/members/${id}`, { method: "PATCH", body: { status: value } })
         toast.success("Cập nhật trạng thái thành công!")
+        router.refresh()
       } catch (e) {
-        toast.error("Lỗi khi cập nhật trạng thái")
+        toast.error(e instanceof Error ? e.message : "Lỗi khi cập nhật trạng thái")
       }
     })
   }
