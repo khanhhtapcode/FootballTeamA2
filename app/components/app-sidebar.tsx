@@ -40,13 +40,19 @@ export function AppSidebar() {
   const pathname = usePathname()
 
   return (
-    <Sidebar className="border-r border-sidebar-border bg-sidebar/70 backdrop-blur-xl">
+    <Sidebar className="border-r border-sidebar-border bg-sidebar/80 backdrop-blur-xl">
       <SidebarHeader className="p-5 border-b border-sidebar-border">
-        <Link href="/" className="flex items-center gap-3 hover:opacity-90 transition-opacity">
-          <Image src="/36.png" alt="FC A2Brotherhood" width={36} height={36} className="rounded-lg" />
+        <Link href="/" className="flex items-center gap-3 hover:opacity-95 transition-opacity group">
+          <div className="relative">
+            <div className="absolute inset-0 rounded-lg bg-primary/20 blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            <Image src="/36.png" alt="FC A2Brotherhood" width={40} height={40} className="relative rounded-lg border border-sidebar-border shadow-md" />
+          </div>
           <div>
-            <h2 className="text-base font-bold tracking-tight text-foreground font-heading leading-tight">FC A2Brotherhood</h2>
-            <span className="text-[10px] uppercase font-semibold tracking-wider text-primary">Football Club</span>
+            <h2 className="text-base font-extrabold tracking-tight text-foreground font-heading leading-tight group-hover:text-primary transition-colors">FC A2Brotherhood</h2>
+            <div className="flex items-center gap-1.5 mt-0.5">
+              <span className="text-[9px] uppercase font-black tracking-widest text-primary">Football Club</span>
+              <span className="text-[8px] px-1 py-0.2 rounded bg-accent/20 text-accent font-mono font-bold">EST. 2026</span>
+            </div>
           </div>
         </Link>
       </SidebarHeader>
@@ -59,15 +65,15 @@ export function AppSidebar() {
               <SidebarMenuItem key={item.title}>
                 <SidebarMenuButton 
                   isActive={isActive}
-                  className={`w-full gap-3 py-5 px-3 rounded-lg cursor-pointer transition-all duration-200 ${
+                  className={`w-full gap-3 py-6 px-3 rounded-xl cursor-pointer active-tactile transition-all duration-300 ${
                     isActive 
-                      ? "bg-primary/10 text-primary font-semibold border-l-2 border-primary pl-2.5 shadow-sm"
-                      : "hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground text-muted-foreground"
+                      ? "bg-linear-to-r from-primary/15 via-primary/5 to-transparent text-primary font-bold border-l-[3px] border-primary pl-2.5 shadow-[inset_1px_0_0_rgba(255,255,255,0.05)]"
+                      : "hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground text-muted-foreground"
                   }`}
                   render={
                     <Link href={item.url}>
-                      <item.icon className={`w-5 h-5 ${isActive ? "text-primary" : "text-muted-foreground"}`} />
-                      <span className="text-sm tracking-wide">{item.title}</span>
+                      <item.icon className={`w-5 h-5 transition-transform duration-300 group-hover/button:scale-105 ${isActive ? "text-primary filter drop-shadow-[0_0_4px_rgba(16,185,129,0.3)]" : "text-muted-foreground"}`} />
+                      <span className="text-sm tracking-wide font-medium">{item.title}</span>
                     </Link>
                   }
                 />
@@ -77,14 +83,14 @@ export function AppSidebar() {
         </SidebarMenu>
       </SidebarContent>
 
-      <SidebarFooter className="p-4 border-t border-sidebar-border">
+      <SidebarFooter className="p-4 border-t border-sidebar-border bg-sidebar-accent/10">
         <form action={logOut}>
           <SidebarMenuButton 
             type="submit" 
-            className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-500/10 cursor-pointer rounded-lg py-5 px-3"
+            className="w-full justify-start text-red-400 hover:text-red-500 hover:bg-red-500/10 cursor-pointer rounded-xl py-6 px-3 active-tactile transition-all duration-200"
           >
-            <LogOut className="mr-3 h-5 w-5" />
-            <span className="text-sm font-medium tracking-wide">Đăng xuất</span>
+            <LogOut className="mr-3 h-5 w-5 transition-transform duration-200 group-hover/button:-translate-x-0.5" />
+            <span className="text-sm font-semibold tracking-wide">Đăng xuất</span>
           </SidebarMenuButton>
         </form>
       </SidebarFooter>

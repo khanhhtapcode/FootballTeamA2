@@ -21,8 +21,12 @@ export default async function FundsPage({
 }) {
   const { year: yearParam } = await searchParams;
   const currentYear = new Date().getFullYear();
+  const currentDate = new Date();
+  const currentMonthIndex = currentDate.getMonth() + 1; // 1 to 12
+  
   const parsedYear = yearParam ? parseInt(yearParam) : currentYear;
   const year = Number.isNaN(parsedYear) ? currentYear : parsedYear;
+  const isCurrentYear = year === currentYear;
 
   // Danh sách năm chọn được: 3 năm trước -> 1 năm sau (luôn bao gồm năm đang xem)
   const yearSet = new Set<number>([year]);
@@ -43,7 +47,7 @@ export default async function FundsPage({
   });
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 pb-12">
       {/* Title Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border">
         <div className="flex items-center gap-3">
@@ -51,15 +55,15 @@ export default async function FundsPage({
             <Wallet className="w-6 h-6" />
           </div>
           <div>
-            <h1 className="text-3xl font-extrabold tracking-tight font-heading">
-              Quỹ Hàng Tháng ({year})
+            <h1 className="text-3xl font-extrabold tracking-tight font-heading text-foreground">
+              QUỸ ĐỘI HẰNG THÁNG ({year})
             </h1>
             <p className="text-sm text-muted-foreground mt-0.5">
-              Theo dõi chi tiết thu chi đóng quỹ của các cầu thủ theo tháng
+              Theo dõi tình hình đóng quỹ 100k hằng tháng của các cầu thủ
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3 self-end sm:self-auto">
           <YearSelect years={years} selectedYear={year} />
           <BulkFundForm
             year={year}
@@ -69,29 +73,39 @@ export default async function FundsPage({
       </div>
 
       {/* Main Glass Table Card */}
-      <div className="rounded-sm border border-border/60 bg-card/30 backdrop-blur-md overflow-hidden shadow-sm">
+      <div className="rounded-2xl border border-border/60 bg-card/25 backdrop-blur-md overflow-hidden shadow-md">
         <div className="overflow-x-auto">
           <Table className="min-w-6xl">
             <TableHeader className="bg-muted/40">
               <TableRow className="border-b border-border hover:bg-transparent">
-                <TableHead className="w-12 border-r border-border text-center font-bold">
+                <TableHead className="w-12 border-r border-border text-center font-black text-muted-foreground">
                   STT
                 </TableHead>
-                <TableHead className="w-48 border-r border-border font-bold text-foreground">
+                <TableHead className="w-48 border-r border-border font-extrabold text-foreground sticky left-0 bg-background/90 z-10">
                   Họ và Tên
                 </TableHead>
-                {Array.from({ length: 12 }).map((_, i) => (
-                  <TableHead
-                    key={i}
-                    className="text-center w-24 border-r border-border border-dashed font-bold text-foreground"
-                  >
-                    Tháng {i + 1}
-                  </TableHead>
-                ))}
-                <TableHead className="text-right border-l border-border w-32 font-bold text-foreground bg-emerald-500/5">
+                {Array.from({ length: 12 }).map((_, i) => {
+                  const isCurrentMonth = isCurrentYear && (i + 1 === currentMonthIndex);
+                  return (
+                    <TableHead
+                      key={i}
+                      className={`text-center w-24 border-r border-border border-dashed font-extrabold text-foreground ${
+                        isCurrentMonth ? "bg-primary/15 border-x border-x-primary/40 text-primary" : ""
+                      }`}
+                    >
+                      <span className="block leading-tight">Tháng {i + 1}</span>
+                      {isCurrentMonth && (
+                        <span className="inline-block text-[8px] bg-primary/20 border border-primary/30 text-primary px-1 rounded font-black tracking-wider uppercase mt-0.5">
+                          Hiện tại
+                        </span>
+                      )}
+                    </TableHead>
+                  );
+                })}
+                <TableHead className="text-right border-l border-border w-32 font-bold text-foreground bg-emerald-500/10">
                   Tổng đóng
                 </TableHead>
-                <TableHead className="text-right w-32 font-bold text-foreground bg-red-500/5">
+                <TableHead className="text-right w-32 font-bold text-foreground bg-red-500/10">
                   Còn nợ
                 </TableHead>
               </TableRow>
@@ -126,31 +140,36 @@ export default async function FundsPage({
                       key={member.id}
                       className="hover:bg-muted/30 border-b border-border/40 transition-colors"
                     >
-                      <TableCell className="border-r border-border text-center font-medium text-muted-foreground">
+                      <TableCell className="border-r border-border text-center font-semibold text-muted-foreground">
                         {index + 1}
                       </TableCell>
-                      <TableCell className="font-bold text-foreground border-r border-border">
+                      <TableCell className="font-extrabold text-foreground border-r border-border sticky left-0 bg-background/95 z-10">
                         {member.fullName}
                       </TableCell>
-                      {monthsData.map((data) => (
-                        <TableCell
-                          key={data.month}
-                          className="p-1 border-r border-border border-dashed"
-                        >
-                          <FundStatusSelect
-                            memberId={member.id}
-                            month={data.month}
-                            year={year}
-                            currentStatus={data.status}
-                          />
-                        </TableCell>
-                      ))}
-                      <TableCell className="text-right border-l border-border font-extrabold text-emerald-500 bg-emerald-500/5">
+                      {monthsData.map((data) => {
+                        const isCurrentMonth = isCurrentYear && (data.month === currentMonthIndex);
+                        return (
+                          <TableCell
+                            key={data.month}
+                            className={`p-1 border-r border-border border-dashed transition-all ${
+                              isCurrentMonth ? "bg-primary/5 border-x border-x-primary/20" : ""
+                            }`}
+                          >
+                            <FundStatusSelect
+                              memberId={member.id}
+                              month={data.month}
+                              year={year}
+                              currentStatus={data.status}
+                            />
+                          </TableCell>
+                        );
+                      })}
+                      <TableCell className="text-right border-l border-border font-black text-emerald-500 bg-emerald-500/5 text-sm">
                         {totalPaid > 0
                           ? `${totalPaid.toLocaleString("vi-VN")} ₫`
                           : "—"}
                       </TableCell>
-                      <TableCell className="text-right font-extrabold text-red-400 bg-red-500/5">
+                      <TableCell className="text-right font-black text-red-400 bg-red-500/5 text-sm">
                         {totalDebt > 0
                           ? `${totalDebt.toLocaleString("vi-VN")} ₫`
                           : "—"}

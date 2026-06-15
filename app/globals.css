@@ -201,3 +201,73 @@
   background-size: 400% 400%;
   animation: aurora-gradient 15s ease infinite;
 }
+
+/* Tactical football pitch grid */
+.tactical-grid {
+  background-size: 40px 40px;
+  background-image: 
+    linear-gradient(to right, oklch(var(--primary) / 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, oklch(var(--primary) / 0.05) 1px, transparent 1px);
+  position: relative;
+}
+.tactical-grid::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 50%, transparent 20%, oklch(var(--background)) 80%);
+  pointer-events: none;
+}
+
+/* Varsity style numbers */
+.varsity-font {
+  font-family: var(--font-heading);
+  font-weight: 900;
+  letter-spacing: -0.05em;
+  font-variant-numeric: tabular-nums;
+  line-height: 0.8;
+}
+
+/* Glow effects */
+.card-glow-emerald:hover {
+  box-shadow: 0 0 25px -5px oklch(var(--primary) / 0.25), 0 0 10px -2px oklch(var(--primary) / 0.15);
+  border-color: oklch(var(--primary) / 0.3);
+}
+
+.card-glow-gold:hover {
+  box-shadow: 0 0 25px -5px oklch(var(--accent) / 0.25), 0 0 10px -2px oklch(var(--accent) / 0.15);
+  border-color: oklch(var(--accent) / 0.3);
+}
+
+/* Active touch tactile feedback */
+.active-tactile:active {
+  transform: scale(0.97);
+}
+
+/* FUT Card Style Player Card */
+.player-card-glow {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.player-card-glow:hover {
+  transform: translateY(-5px) scale(1.01);
+  box-shadow: 0 20px 30px -10px rgba(0, 0, 0, 0.3), 
+              0 0 20px 2px oklch(var(--primary) / 0.2);
+  border-color: oklch(var(--primary) / 0.4);
+}
+
+.player-card-bg-gk {
+  background: linear-gradient(135deg, oklch(var(--card)) 0%, oklch(0.65 0.15 240 / 0.08) 100%);
+}
+.player-card-bg-df {
+  background: linear-gradient(135deg, oklch(var(--card)) 0%, oklch(0.55 0.15 190 / 0.08) 100%);
+}
+.player-card-bg-mf {
+  background: linear-gradient(135deg, oklch(var(--card)) 0%, oklch(0.62 0.18 148 / 0.08) 100%);
+}
+.player-card-bg-fw {
+  background: linear-gradient(135deg, oklch(var(--card)) 0%, oklch(0.62 0.18 25 / 0.08) 100%);
+}
+.player-card-bg-ut {
+  background: linear-gradient(135deg, oklch(var(--card)) 0%, oklch(0.78 0.16 75 / 0.08) 100%);
+}
