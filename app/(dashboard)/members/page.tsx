@@ -3,14 +3,26 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { MemberForm } from "./_components/member-form"
 import { MemberStatusSelect } from "./_components/member-status-select"
 import { MemberLineupSelect } from "./_components/member-lineup-select"
-import { Users, LayoutGrid, List, Phone, Calendar, Shirt, Eye } from "lucide-react"
+import { Users, LayoutGrid, List, Phone, Calendar, Shirt } from "lucide-react"
 import Link from "next/link"
+import { MEMBER_POSITIONS } from "@/lib/constants"
+
+interface RosterMember {
+  id: number
+  fullName: string
+  position: string | null
+  jerseyNumber: number | null
+  phone: string | null
+  joinDate: Date
+  status: string
+  lineupPosition: string | null
+}
 
 type Props = {
   searchParams: Promise<{ view?: string; position?: string }>
 }
 
-const POSITIONS = ["Tất cả", "Thủ môn", "Hậu vệ", "Tiền vệ", "Tiền đạo", "Đa năng"]
+const POSITIONS = MEMBER_POSITIONS
 
 export default async function MembersPage({ searchParams }: Props) {
   const { view: viewParam, position: positionParam } = await searchParams
@@ -20,10 +32,10 @@ export default async function MembersPage({ searchParams }: Props) {
   // Xây dựng điều kiện lọc theo vị trí thi đấu
   const whereClause = selectedPosition !== "Tất cả" ? { position: selectedPosition } : {}
 
-  const members = await db.member.findMany({
+  const members = (await db.member.findMany({
     where: whereClause,
     orderBy: { createdAt: 'desc' }
-  })
+  })) as unknown as RosterMember[]
 
   // Định nghĩa màu sắc badge cho từng vị trí thi đấu
   const getPositionColor = (pos: string | null) => {

@@ -14,3 +14,7 @@ export const MEMBER_STATUS = {
   PAUSED: "Tạm nghỉ",
   RETIRED: "Giải nghệ",
 } as const
+
+// Vị trí thi đấu
+export const MEMBER_POSITIONS = ["Tất cả", "Thủ môn", "Hậu vệ", "Tiền vệ", "Tiền đạo", "Đa năng"] as const
+

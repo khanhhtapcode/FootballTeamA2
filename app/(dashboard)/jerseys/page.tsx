@@ -2,7 +2,7 @@ import { db } from "@/lib/db"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { JerseyForm } from "./_components/jersey-form"
 import { JerseyPayForm } from "./_components/jersey-pay-form"
-import { Shirt, Landmark, BadgeAlert, BadgeCheck, DollarSign, Wallet, Percent } from "lucide-react"
+import { Shirt, Landmark, BadgeCheck, Wallet } from "lucide-react"
 
 export default async function JerseysPage() {
   const members = await db.member.findMany({

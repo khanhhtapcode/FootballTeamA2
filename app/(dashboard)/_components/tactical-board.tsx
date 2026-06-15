@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { useState, useTransition } from "react"
+import { useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { Select as SelectPrimitive } from "@base-ui/react/select"
 import { cn } from "@/lib/utils"
@@ -68,7 +68,7 @@ export function TacticalBoard({ activeMembers }: Props) {
         <div className="space-y-1">
           <span className="text-xs font-mono tracking-widest text-muted-foreground uppercase flex items-center gap-1.5">
             <Settings className="w-3.5 h-3.5 text-primary animate-spin-slow" />
-            // ĐỘI HÌNH RA SÂN CHÍNH THỨC
+            {"// ĐỘI HÌNH RA SÂN CHÍNH THỨC"}
           </span>
           <p className="text-[10px] text-muted-foreground font-mono uppercase">Lựa chọn cầu thủ ra sân cho từng vị trí (Sơ đồ 3-2-1)</p>
         </div>
@@ -167,7 +167,7 @@ export function TacticalBoard({ activeMembers }: Props) {
         <div className="xl:col-span-2 flex flex-col justify-between border-t xl:border-t-0 xl:border-l border-border/60 pt-4 xl:pt-0 xl:pl-6 space-y-3">
           <div className="space-y-3">
             <span className="text-[10px] font-mono tracking-widest text-muted-foreground uppercase block font-bold">
-              // DANH SÁCH VỊ TRÍ CHI TIẾT
+              {"// DANH SÁCH VỊ TRÍ CHI TIẾT"}
             </span>
             <div className="space-y-2 max-h-[260px] xl:max-h-[300px] overflow-y-auto pr-1">
               {POSITIONS.map((pos) => {

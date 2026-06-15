@@ -2,7 +2,7 @@ import { db } from "@/lib/db"
 import { ScheduleForm } from "./_components/schedule-form"
 import { ScheduleStatusSelect } from "./_components/schedule-status-select"
 import { format } from "date-fns"
-import { Calendar, MapPin, Trophy, FileText, Clock, Sparkles } from "lucide-react"
+import { Calendar, MapPin, Trophy, FileText, Clock } from "lucide-react"
 import Image from "next/image"
 
 export default async function SchedulePage() {

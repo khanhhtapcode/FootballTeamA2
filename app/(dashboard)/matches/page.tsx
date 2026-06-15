@@ -1,7 +1,7 @@
 import { db } from "@/lib/db"
 import { MatchForm } from "./_components/match-form"
 import { format } from "date-fns"
-import { Trophy, Calendar, MapPin, Users, DollarSign, Footprints, FileText } from "lucide-react"
+import { Trophy, Calendar, MapPin, Users, Footprints, FileText } from "lucide-react"
 import Image from "next/image"
 
 export default async function MatchesPage() {

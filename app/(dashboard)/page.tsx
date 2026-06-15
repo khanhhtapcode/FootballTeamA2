@@ -1,5 +1,5 @@
 import { db } from "@/lib/db"
-import { Users, DollarSign, Calendar, Trophy, MapPin, Footprints, ShieldAlert, Settings, Info, ArrowRight } from "lucide-react"
+import { MapPin, Info, ArrowRight } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { format } from "date-fns"
@@ -195,7 +195,7 @@ export default async function DashboardPage() {
           <div className="rounded-2xl border border-white/5 bg-card/20 backdrop-blur-md p-6 space-y-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
             <div className="flex items-center justify-between">
               <span className="text-xs font-mono tracking-widest text-muted-foreground uppercase">
-                // LỊCH THI ĐẤU TIẾP THEO
+                {"// LỊCH THI ĐẤU TIẾP THEO"}
               </span>
               <Link href="/schedule" className="text-xs font-semibold text-primary hover:underline flex items-center gap-1 font-mono">
                 QUẢN LÝ LỊCH <ArrowRight className="w-3.5 h-3.5" />
@@ -246,7 +246,7 @@ export default async function DashboardPage() {
           <div className="rounded-2xl border border-white/5 bg-card/20 backdrop-blur-md p-6 space-y-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
             <div className="flex items-center justify-between">
               <span className="text-xs font-mono tracking-widest text-muted-foreground uppercase">
-                // KẾT QUẢ ĐỐI ĐẦU MỚI NHẤT
+                {"// KẾT QUẢ ĐỐI ĐẦU MỚI NHẤT"}
               </span>
               <Link href="/matches" className="text-xs font-semibold text-primary hover:underline flex items-center gap-1 font-mono">
                 LỊCH SỬ TRẬN ĐẤU <ArrowRight className="w-3.5 h-3.5" />
@@ -304,7 +304,7 @@ export default async function DashboardPage() {
           {/* Top Scorers list widget */}
           <div className="rounded-2xl border border-white/5 bg-card/20 backdrop-blur-md p-6 space-y-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
             <span className="text-xs font-mono tracking-widest text-muted-foreground uppercase block border-b border-border/40 pb-2">
-              // VUA PHÁ LƯỚI
+              {"// VUA PHÁ LƯỚI"}
             </span>
 
             {topScorers.length === 0 ? (
@@ -336,22 +336,22 @@ export default async function DashboardPage() {
           <div className="rounded-2xl border border-white/5 bg-card/20 backdrop-blur-md p-6 space-y-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
             <span className="text-xs font-mono tracking-widest text-muted-foreground uppercase block border-b border-border/40 pb-2 flex items-center gap-1.5">
               <Info className="w-3.5 h-3.5 text-primary" />
-              // ĐIỀU LỆ HOẠT ĐỘNG
+              {"// ĐIỀU LỆ HOẠT ĐỘNG"}
             </span>
             
             <div className="space-y-4 text-xs text-muted-foreground">
               <div className="space-y-1">
-                <span className="font-bold text-foreground block uppercase text-[10px] tracking-wider text-primary">// LỊCH ĐÁ CỐ ĐỊNH</span>
+                <span className="font-bold text-foreground block uppercase text-[10px] tracking-wider text-primary">{"// LỊCH ĐÁ CỐ ĐỊNH"}</span>
                 <p className="leading-relaxed text-[11px]">Tối thứ 3 hằng tuần (20h00 - 21h30). Yêu cầu có mặt trước giờ lăn bóng 15 phút để khởi động.</p>
               </div>
 
               <div className="space-y-1">
-                <span className="font-bold text-foreground block uppercase text-[10px] tracking-wider text-primary">// QUỸ NỘI BỘ</span>
+                <span className="font-bold text-foreground block uppercase text-[10px] tracking-wider text-primary">{"// QUỸ NỘI BỘ"}</span>
                 <p className="leading-relaxed text-[11px]">Đóng tiền quỹ cố định 100k/tháng. Các tháng nợ sẽ hiển thị nợ công cụ trong trang Quỹ.</p>
               </div>
 
               <div className="space-y-1">
-                <span className="font-bold text-foreground block uppercase text-[10px] tracking-wider text-primary">// PHÂN CHIA CHI PHÍ</span>
+                <span className="font-bold text-foreground block uppercase text-[10px] tracking-wider text-primary">{"// PHÂN CHIA CHI PHÍ"}</span>
                 <p className="leading-relaxed text-[11px]">Tiền thuê sân đấu chia đều tại chỗ cho các cầu thủ đăng ký đá trận đó. Tiền nước uống chi trả từ Quỹ đội.</p>
               </div>
             </div>
