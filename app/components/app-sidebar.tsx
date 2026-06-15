@@ -1,18 +1,18 @@
 "use client"
 
 import * as React from "react"
+import Image from "next/image"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { 
-  LayoutDashboard, 
-  Users, 
-  Wallet, 
-  Trophy, 
-  Receipt, 
-  Calendar, 
+import {
+  LayoutDashboard,
+  Users,
+  Wallet,
+  Trophy,
+  Receipt,
+  Calendar,
   Shirt,
   LogOut,
-  Flame
 } from "lucide-react"
 
 import {
@@ -43,9 +43,7 @@ export function AppSidebar() {
     <Sidebar className="border-r border-sidebar-border bg-sidebar/70 backdrop-blur-xl">
       <SidebarHeader className="p-5 border-b border-sidebar-border">
         <Link href="/" className="flex items-center gap-3 hover:opacity-90 transition-opacity">
-          <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-primary/20 text-primary border border-primary/30 shadow-inner">
-            <Flame className="w-5 h-5 fill-primary/10 animate-pulse" />
-          </div>
+          <Image src="/36.png" alt="FC A2Brotherhood" width={36} height={36} className="rounded-lg" />
           <div>
             <h2 className="text-base font-bold tracking-tight text-foreground font-heading leading-tight">FC A2Brotherhood</h2>
             <span className="text-[10px] uppercase font-semibold tracking-wider text-primary">Football Club</span>

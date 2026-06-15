@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
-import { Flame, Lock } from "lucide-react"
+import Image from "next/image"
+import { Lock } from "lucide-react"
 
 export default function LoginPage() {
   const [errorMessage, dispatch, isPending] = useActionState(
@@ -22,9 +23,7 @@ export default function LoginPage() {
 
       <Card className="w-full max-w-md glass-panel border border-white/10 dark:bg-black/40 backdrop-blur-xl shadow-2xl relative z-10">
         <CardHeader className="space-y-2 text-center pb-6 border-b border-white/5">
-          <div className="mx-auto flex items-center justify-center w-12 h-12 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shadow-inner mb-2 animate-bounce-slow">
-            <Flame className="w-6 h-6 fill-emerald-500/10" />
-          </div>
+          <Image src="/36.png" alt="FC A2Brotherhood" width={80} height={80} className="mx-auto mb-2 rounded-xl drop-shadow-lg" />
           <CardTitle className="text-3xl font-bold font-heading tracking-tight text-white">
             FC A2Brotherhood
           </CardTitle>

@@ -21,6 +21,7 @@ export const metadata: Metadata = {
   title: "FC A2Brotherhoods | Quản lý Đội bóng Chuyên nghiệp",
   description: "Hệ thống quản lý nội bộ chuyên nghiệp cho FC A2Brotherhoods. Quản lý thành viên, lịch thi đấu, kết quả trận đấu, thu tiền áo và quỹ đội hàng tháng.",
   keywords: ["quản lý đội bóng", "football team manager", "FC A2Brotherhoods", "quản lý quỹ", "lịch thi đấu"],
+  icons: { icon: "/36.png" },
 };
 
 export default function RootLayout({
