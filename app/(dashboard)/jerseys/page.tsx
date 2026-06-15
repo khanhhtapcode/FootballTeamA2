@@ -160,14 +160,14 @@ export default async function JerseysPage() {
                       <TableCell className="text-center font-semibold text-muted-foreground">{index + 1}</TableCell>
                       <TableCell className="font-extrabold text-foreground">{order.member.fullName}</TableCell>
                       <TableCell className="text-center font-black text-primary text-base">
-                        {order.jerseyNumber !== null ? `#${order.jerseyNumber}` : "—"}
+                        {order.jerseyNumber !== null ? `#${order.jerseyNumber}` : "N/A"}
                       </TableCell>
                       <TableCell className="text-center">
                         <span className="inline-flex items-center justify-center w-8 h-8 text-xs rounded-lg bg-muted border border-border/80 font-black text-foreground">
-                          {order.size || "—"}
+                          {order.size || "N/A"}
                         </span>
                       </TableCell>
-                      <TableCell className="text-sm font-medium text-foreground">{order.description || "—"}</TableCell>
+                      <TableCell className="text-sm font-medium text-foreground">{order.description || "Trống"}</TableCell>
                       <TableCell className="text-center font-bold text-foreground">{order.quantity}</TableCell>
                       <TableCell className="text-right font-medium text-foreground">
                         {order.unitPrice.toLocaleString('vi-VN')} ₫
@@ -179,7 +179,7 @@ export default async function JerseysPage() {
                         {order.paidAmount.toLocaleString('vi-VN')} ₫
                       </TableCell>
                       <TableCell className="text-right font-black text-red-400 bg-red-500/5">
-                        {debt > 0 ? `${debt.toLocaleString('vi-VN')} ₫` : "—"}
+                        {debt > 0 ? `${debt.toLocaleString('vi-VN')} ₫` : "0 ₫"}
                       </TableCell>
                       <TableCell className="text-center py-2.5">
                         <span className={`px-2.5 py-1 text-xs rounded-full font-bold border inline-block w-24 text-center ${

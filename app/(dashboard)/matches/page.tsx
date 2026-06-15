@@ -75,7 +75,7 @@ export default async function MatchesPage() {
                   {/* Score Box */}
                   <div className="flex flex-col items-center shrink-0">
                     <div className="bg-slate-950/90 border border-border/80 px-4.5 py-2 rounded-xl shadow-inner font-mono text-xl font-black tracking-wider text-white">
-                      {match.score || "—"}
+                      {match.score || "N/A"}
                     </div>
                     <span className={`px-2 py-0.5 text-[9px] uppercase font-black tracking-wider rounded-full border mt-2.5 w-16 text-center ${
                       isWin ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" :

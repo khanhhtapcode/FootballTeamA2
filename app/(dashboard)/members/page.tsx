@@ -150,7 +150,7 @@ export default async function MembersPage({ searchParams }: Props) {
                         #{member.jerseyNumber}
                       </span>
                     ) : (
-                      <span className="text-xs text-muted-foreground">—</span>
+                      <span className="text-xs text-muted-foreground">N/A</span>
                     )}
                   </div>
                   
@@ -217,7 +217,7 @@ export default async function MembersPage({ searchParams }: Props) {
                         </span>
                       </TableCell>
                       <TableCell className="font-black text-primary text-center text-base">
-                        {member.jerseyNumber !== null ? `#${member.jerseyNumber}` : "—"}
+                        {member.jerseyNumber !== null ? `#${member.jerseyNumber}` : "N/A"}
                       </TableCell>
                       <TableCell className="text-sm font-mono text-muted-foreground font-semibold">
                         {member.phone ? (
@@ -226,7 +226,7 @@ export default async function MembersPage({ searchParams }: Props) {
                             {member.phone}
                           </a>
                         ) : (
-                          "—"
+                          "Chưa có"
                         )}
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground font-medium">

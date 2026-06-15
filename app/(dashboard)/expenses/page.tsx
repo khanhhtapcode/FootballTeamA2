@@ -66,7 +66,7 @@ export default async function ExpensesPage() {
                     <TableCell className="text-right font-extrabold text-red-400 bg-red-500/5">
                       -{expense.amount.toLocaleString('vi-VN')} ₫
                     </TableCell>
-                    <TableCell className="font-medium text-foreground">{expense.spender || "—"}</TableCell>
+                    <TableCell className="font-medium text-foreground">{expense.spender || "Chưa có"}</TableCell>
                     <TableCell className="py-2.5">
                       <span className={`px-2.5 py-1 text-xs rounded-full font-bold border inline-block w-24 text-center ${
                         expense.source === 'Quỹ đội' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' :
@@ -77,7 +77,7 @@ export default async function ExpensesPage() {
                       </span>
                     </TableCell>
                     <TableCell className="text-xs text-muted-foreground max-w-[150px] truncate" title={expense.notes || ""}>
-                      {expense.notes || "—"}
+                      {expense.notes || "Không có"}
                     </TableCell>
                   </TableRow>
                 ))

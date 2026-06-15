@@ -37,7 +37,7 @@ export function FundStatusSelect({ memberId, month, year, currentStatus }: { mem
       <SelectContent>
         <SelectItem value="✅" className="cursor-pointer">Đã đóng (✅)</SelectItem>
         <SelectItem value="❌" className="cursor-pointer font-bold text-red-500">Chưa đóng (❌)</SelectItem>
-        <SelectItem value="—" className="cursor-pointer">Không tham gia (—)</SelectItem>
+        <SelectItem value="—" className="cursor-pointer">Không tham gia</SelectItem>
       </SelectContent>
     </Select>
   )

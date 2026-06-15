@@ -167,12 +167,12 @@ export default async function FundsPage({
                       <TableCell className="text-right border-l border-border font-black text-emerald-500 bg-emerald-500/5 text-sm">
                         {totalPaid > 0
                           ? `${totalPaid.toLocaleString("vi-VN")} ₫`
-                          : "—"}
+                          : "0 ₫"}
                       </TableCell>
                       <TableCell className="text-right font-black text-red-400 bg-red-500/5 text-sm">
                         {totalDebt > 0
                           ? `${totalDebt.toLocaleString("vi-VN")} ₫`
-                          : "—"}
+                          : "0 ₫"}
                       </TableCell>
                     </TableRow>
                   );
