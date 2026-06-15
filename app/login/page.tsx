@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
-import Image from "next/image"
 import { Lock } from "lucide-react"
 
 export default function LoginPage() {
@@ -21,9 +20,10 @@ export default function LoginPage() {
       <div className="absolute top-1/4 left-1/4 w-72 h-72 rounded-full bg-emerald-500/10 blur-3xl" />
       <div className="absolute bottom-1/4 right-1/4 w-72 h-72 rounded-full bg-amber-500/10 blur-3xl" />
 
-      <Card className="w-full max-w-md glass-panel border border-white/10 dark:bg-black/40 backdrop-blur-xl shadow-2xl relative z-10">
+      <Card className="w-full max-w-md border border-white/10 bg-black/50 backdrop-blur-xl shadow-2xl relative z-10">
         <CardHeader className="space-y-2 text-center pb-6 border-b border-white/5">
-          <Image src="/36.png" alt="FC A2Brotherhood" width={80} height={80} className="mx-auto mb-2 rounded-xl drop-shadow-lg" />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/36.png" alt="FC A2Brotherhood" width={80} height={80} className="mx-auto mb-2 rounded-xl drop-shadow-lg" />
           <CardTitle className="text-3xl font-bold font-heading tracking-tight text-white">
             FC A2Brotherhood
           </CardTitle>
