@@ -38,31 +38,66 @@ export function MemberForm({ member }: { member?: any }) {
   // Hàm xử lý hiển thị ảnh ngay lập tức khi vừa chọn file
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (file) {
-      const imageUrl = URL.createObjectURL(file)
-      setPreview(imageUrl)
+
+    if (!file) return
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Vui lòng chọn file ảnh")
+      e.target.value = ""
+      return
     }
+
+    if (file.size > 4 * 1024 * 1024) {
+      toast.error("Ảnh không được vượt quá 4MB")
+      e.target.value = ""
+      return
+    }
+
+    const imageUrl = URL.createObjectURL(file)
+    setPreview(imageUrl)
   }
 
   async function onSubmit(formData: FormData) {
     startTransition(async () => {
       try {
-        let avatarUrl = member?.avatarUrl || ""; 
-        const file = formData.get("avatar") as File;
+        let avatarUrl: string | null = member?.avatarUrl || null
+        const file = formData.get("avatar")
 
-        // Nếu có chọn ảnh mới thì gọi API Upload
-        if (file && file.size > 0) {
-          const uploadData = new FormData();
-          uploadData.append("file", file);
-          
-          const uploadRes = await fetch("/api/upload", {
+        // Nếu có chọn ảnh mới thì upload lên Cloudinary
+        if (file instanceof File && file.size > 0) {
+          if (!file.type.startsWith("image/")) {
+            throw new Error("File tải lên phải là ảnh")
+          }
+
+          if (file.size > 4 * 1024 * 1024) {
+            throw new Error("Ảnh không được vượt quá 4MB")
+          }
+
+          const uploadData = new FormData()
+          uploadData.append("file", file)
+
+          const uploadRes = await fetch("/api/upload/avatar", {
             method: "POST",
             body: uploadData,
-          });
-          
-          if (!uploadRes.ok) throw new Error("Upload ảnh thất bại. Kiểm tra lại API /api/upload");
-          const data = await uploadRes.json();
-          avatarUrl = data.url; 
+          })
+
+          const uploadResult = await uploadRes.json()
+
+          if (!uploadRes.ok) {
+            throw new Error(
+              uploadResult?.error ||
+                uploadResult?.message ||
+                "Upload ảnh thất bại"
+            )
+          }
+
+          const uploadedUrl = uploadResult?.data?.url || uploadResult?.url
+
+          if (!uploadedUrl) {
+            throw new Error("Không nhận được URL ảnh từ Cloudinary")
+          }
+
+          avatarUrl = uploadedUrl
         }
 
         const payload = {
@@ -70,23 +105,25 @@ export function MemberForm({ member }: { member?: any }) {
           position: formData.get("position"),
           jerseyNumber: formData.get("jerseyNumber"),
           phone: formData.get("phone"),
-          avatarUrl: avatarUrl,
-        };
+          avatarUrl,
+        }
 
         if (isEdit) {
           await apiFetch(`/api/members/${member.id}`, {
             method: "PUT",
             body: payload,
           })
+
           toast.success("Cập nhật thành viên thành công")
         } else {
           await apiFetch("/api/members", {
             method: "POST",
             body: payload,
           })
+
           toast.success("Thêm thành viên thành công")
         }
-        
+
         setOpen(false)
         router.refresh()
       } catch (error) {
