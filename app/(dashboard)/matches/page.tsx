@@ -1,6 +1,7 @@
 import { db } from "@/lib/db"
 import { MatchForm } from "./_components/match-form"
 import { MatchDetailDialog } from "./_components/match-detail-dialog"
+import { MatchDeleteButton } from "./_components/match-delete-button"
 import { format } from "date-fns"
 import {
   Trophy,
@@ -92,6 +93,31 @@ export default async function MatchesPage() {
                 : match.scorers
 
             const detailMatch = {
+              id: match.id,
+              date: match.date.toISOString(),
+              opponent: match.opponent,
+              location: match.location,
+              score: match.score,
+              result: match.result,
+              playersCount: match.playersCount,
+              pitchFee: match.pitchFee,
+              scorers: match.scorers,
+              notes: match.notes,
+              playerStats: match.playerStats.map((stat) => ({
+                id: stat.id,
+                goals: stat.goals,
+                assists: stat.assists,
+                member: {
+                  id: stat.member.id,
+                  fullName: stat.member.fullName,
+                  jerseyNumber: stat.member.jerseyNumber,
+                  position: stat.member.position,
+                  avatarUrl: stat.member.avatarUrl,
+                },
+              })),
+            }
+
+            const editMatch = {
               id: match.id,
               date: match.date.toISOString(),
               opponent: match.opponent,
@@ -273,7 +299,17 @@ export default async function MatchesPage() {
                     </div>
                   </div>
 
-                  <MatchDetailDialog match={detailMatch} feePerPerson={feePerPerson} />
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <div className="flex-1">
+                      <MatchDetailDialog match={detailMatch} feePerPerson={feePerPerson} />
+                    </div>
+                    <div className="flex-1">
+                      <MatchForm match={editMatch} />
+                    </div>
+                    <div className="flex-1">
+                      <MatchDeleteButton matchId={match.id} opponent={match.opponent} />
+                    </div>
+                  </div>
                 </div>
               </div>
             )

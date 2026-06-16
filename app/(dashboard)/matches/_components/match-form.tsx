@@ -13,7 +13,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Plus, Trophy, CalendarIcon, Trash2 } from "lucide-react"
+import { Plus, Trophy, CalendarIcon, Trash2, Pencil } from "lucide-react"
 import { apiFetch } from "@/lib/api-client"
 import { useState, useTransition, useEffect } from "react"
 import { useRouter } from "next/navigation"
@@ -30,11 +30,39 @@ type PlayerStatInput = {
   assists: number;
 }
 
-export function MatchForm() {
+type MatchFormData = {
+  id: number
+  date: string
+  opponent: string
+  location: string | null
+  score: string | null
+  result: string
+  playersCount: number
+  pitchFee: number
+  scorers: string | null
+  notes: string | null
+  playerStats: {
+    id: number
+    goals: number
+    assists: number
+    member: {
+      id: number
+      fullName: string
+      jerseyNumber: number | null
+      position: string | null
+      avatarUrl?: string | null
+    }
+  }[]
+}
+
+export function MatchForm({ match }: { match?: MatchFormData }) {
   const [open, setOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
-  const [date, setDate] = useState<Date>(new Date())
+  const [date, setDate] = useState<Date>(
+    match?.date ? new Date(match.date) : new Date()
+  )
   const router = useRouter()
+  const isEdit = !!match
 
   // State lưu danh sách thành viên lấy từ API
   const [members, setMembers] = useState<{id: number, fullName: string}[]>([])
@@ -55,9 +83,17 @@ export function MatchForm() {
   // Reset form khi đóng/mở
   useEffect(() => {
     if (open) {
-      setPlayerStats([]);
+      setDate(match?.date ? new Date(match.date) : new Date())
+
+      setPlayerStats(
+        match?.playerStats?.map((stat) => ({
+          memberId: stat.member.id.toString(),
+          goals: stat.goals,
+          assists: stat.assists,
+        })) || []
+      )
     }
-  }, [open])
+  }, [open, match])
 
   async function onSubmit(formData: FormData) {
     startTransition(async () => {
@@ -71,22 +107,34 @@ export function MatchForm() {
             assists: stat.assists
           }));
 
-        await apiFetch("/api/matches", {
-          method: "POST",
-          body: {
-            date: formData.get("date"),
-            opponent: formData.get("opponent"),
-            location: formData.get("location"),
-            score: formData.get("score"),
-            result: formData.get("result"),
-            playersCount: formData.get("playersCount"),
-            pitchFee: formData.get("pitchFee"),
-            scorers: formData.get("scorers"),
-            notes: formData.get("notes"),
-            playerStats: validStats,
-          },
-        })
-        toast.success("Thêm trận đấu thành công")
+        const payload = {
+          date: formData.get("date"),
+          opponent: formData.get("opponent"),
+          location: formData.get("location"),
+          score: formData.get("score"),
+          result: formData.get("result"),
+          playersCount: formData.get("playersCount"),
+          pitchFee: formData.get("pitchFee"),
+          scorers: formData.get("scorers"),
+          notes: formData.get("notes"),
+          playerStats: validStats,
+        }
+
+        if (isEdit) {
+          await apiFetch(`/api/matches/${match.id}`, {
+            method: "PUT",
+            body: payload,
+          })
+
+          toast.success("Cập nhật trận đấu thành công")
+        } else {
+          await apiFetch("/api/matches", {
+            method: "POST",
+            body: payload,
+          })
+
+          toast.success("Thêm trận đấu thành công")
+        }
         setOpen(false)
         router.refresh()
       } catch (error) {
@@ -114,19 +162,34 @@ export function MatchForm() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger render={
-        <Button className="cursor-pointer bg-primary hover:bg-primary/95 text-primary-foreground font-bold hover-lift shadow-sm">
-          <Plus className="mr-2 h-4 w-4" />
-          Thêm trận đấu
-        </Button>
+        isEdit ? (
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-9 text-xs font-bold border-blue-500/20 text-blue-500 hover:bg-blue-500/10"
+          >
+            <Pencil className="w-3.5 h-3.5 mr-1.5" />
+            Sửa
+          </Button>
+        ) : (
+          <Button className="cursor-pointer bg-primary hover:bg-primary/95 text-primary-foreground font-bold hover-lift shadow-sm">
+            <Plus className="mr-2 h-4 w-4" />
+            Thêm trận đấu
+          </Button>
+        )
       } />
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto glass-panel border border-border">
         <DialogHeader className="space-y-1">
           <div className="flex items-center gap-2 text-primary font-bold">
             <Trophy className="w-5 h-5" />
-            <DialogTitle className="font-heading">Thêm kết quả trận đấu</DialogTitle>
+            <DialogTitle className="font-heading">
+              {isEdit ? "Cập nhật kết quả trận đấu" : "Thêm kết quả trận đấu"}
+            </DialogTitle>
           </div>
           <DialogDescription className="text-muted-foreground text-xs">
-            Điền thông tin kết quả. Chi phí sân sẽ tự động được thêm vào bảng Chi Phí.
+            {isEdit
+              ? "Chỉnh sửa thông tin kết quả, bàn thắng và kiến tạo của trận đấu."
+              : "Điền thông tin kết quả. Chi phí sân sẽ tự động được thêm vào bảng Chi Phí."}
           </DialogDescription>
         </DialogHeader>
         <form action={onSubmit}>
@@ -153,20 +216,39 @@ export function MatchForm() {
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="opponent" className="text-right text-sm font-semibold">Đối thủ <span className="text-red-500">*</span></Label>
-              <Input id="opponent" name="opponent" placeholder="Tên đội bạn" className="col-span-3 h-10 border-border bg-background/50" required />
+              <Input
+                id="opponent"
+                name="opponent"
+                defaultValue={match?.opponent || ""}
+                placeholder="Tên đội bạn"
+                className="col-span-3 h-10 border-border bg-background/50"
+                required
+              />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="location" className="text-right text-sm font-semibold">Sân đấu</Label>
-              <Input id="location" name="location" placeholder="Tên sân bóng" className="col-span-3 h-10 border-border bg-background/50" />
+              <Input
+                id="location"
+                name="location"
+                defaultValue={match?.location || ""}
+                placeholder="Tên sân bóng"
+                className="col-span-3 h-10 border-border bg-background/50"
+              />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="score" className="text-right text-sm font-semibold">Tỷ số</Label>
-              <Input id="score" name="score" placeholder="VD: 3-1" className="col-span-3 h-10 border-border bg-background/50" />
+              <Input
+                id="score"
+                name="score"
+                defaultValue={match?.score || ""}
+                placeholder="VD: 3-1"
+                className="col-span-3 h-10 border-border bg-background/50"
+              />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="result" className="text-right text-sm font-semibold">Kết quả <span className="text-red-500">*</span></Label>
               <div className="col-span-3">
-                <Select name="result" defaultValue="Thắng" required>
+                <Select name="result" defaultValue={match?.result || "Thắng"} required>
                   <SelectTrigger className="h-10 border-border bg-background/50">
                     <SelectValue placeholder="Kết quả" />
                   </SelectTrigger>
@@ -180,15 +262,37 @@ export function MatchForm() {
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="playersCount" className="text-right text-sm font-semibold">Số người <span className="text-red-500">*</span></Label>
-              <Input id="playersCount" name="playersCount" type="number" min="1" placeholder="Số cầu thủ chia tiền" className="col-span-3 h-10 border-border bg-background/50" required />
+              <Input
+                id="playersCount"
+                name="playersCount"
+                type="number"
+                min="1"
+                defaultValue={match?.playersCount || ""}
+                placeholder="Số cầu thủ chia tiền"
+                className="col-span-3 h-10 border-border bg-background/50"
+                required
+              />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="pitchFee" className="text-right text-sm font-semibold">Phí sân (₫)</Label>
-              <Input id="pitchFee" name="pitchFee" type="number" min="0" defaultValue="0" className="col-span-3 h-10 border-border bg-background/50" />
+              <Input
+                id="pitchFee"
+                name="pitchFee"
+                type="number"
+                min="0"
+                defaultValue={match?.pitchFee ?? 0}
+                className="col-span-3 h-10 border-border bg-background/50"
+              />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="scorers" className="text-right text-sm font-semibold">Ghi bàn (Tóm tắt)</Label>
-              <Input id="scorers" name="scorers" placeholder="VD: Cường(2), Tuấn(1)" className="col-span-3 h-10 border-border bg-background/50" />
+              <Input
+                id="scorers"
+                name="scorers"
+                defaultValue={match?.scorers || ""}
+                placeholder="VD: Cường(2), Tuấn(1)"
+                className="col-span-3 h-10 border-border bg-background/50"
+              />
             </div>
             
             <div className="grid grid-cols-4 items-center gap-4">
@@ -198,6 +302,7 @@ export function MatchForm() {
               <Input
                 id="notes"
                 name="notes"
+                defaultValue={match?.notes || ""}
                 placeholder="VD: Trận đấu hay, thiếu người, thời tiết xấu..."
                 className="col-span-3 h-10 border-border bg-background/50"
               />
@@ -264,7 +369,7 @@ export function MatchForm() {
           </div>
           <DialogFooter className="pt-2">
             <Button type="submit" className="cursor-pointer bg-primary hover:bg-primary/95 text-primary-foreground font-bold h-10 w-full sm:w-auto hover-lift" disabled={isPending}>
-              {isPending ? "Đang lưu..." : "Lưu kết quả"}
+              {isPending ? "Đang lưu..." : isEdit ? "Cập nhật" : "Lưu kết quả"}
             </Button>
           </DialogFooter>
         </form>

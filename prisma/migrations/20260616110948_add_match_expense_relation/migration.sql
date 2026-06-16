@@ -8,6 +8,8 @@ CREATE TABLE "Member" (
     "joinDate" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "status" TEXT NOT NULL DEFAULT 'Hoạt động',
     "notes" TEXT,
+    "lineupPosition" TEXT,
+    "avatarUrl" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -53,6 +55,7 @@ CREATE TABLE "Expense" (
     "spender" TEXT,
     "source" TEXT NOT NULL,
     "notes" TEXT,
+    "matchId" INTEGER,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "Expense_pkey" PRIMARY KEY ("id")
@@ -90,14 +93,40 @@ CREATE TABLE "Schedule" (
     CONSTRAINT "Schedule_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "PlayerMatchStat" (
+    "id" SERIAL NOT NULL,
+    "matchId" INTEGER NOT NULL,
+    "memberId" INTEGER NOT NULL,
+    "goals" INTEGER NOT NULL DEFAULT 0,
+    "assists" INTEGER NOT NULL DEFAULT 0,
+
+    CONSTRAINT "PlayerMatchStat_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "Member_fullName_key" ON "Member"("fullName");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "FundRecord_memberId_month_year_key" ON "FundRecord"("memberId", "month", "year");
 
+-- CreateIndex
+CREATE UNIQUE INDEX "Expense_matchId_key" ON "Expense"("matchId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "PlayerMatchStat_matchId_memberId_key" ON "PlayerMatchStat"("matchId", "memberId");
+
 -- AddForeignKey
 ALTER TABLE "FundRecord" ADD CONSTRAINT "FundRecord_memberId_fkey" FOREIGN KEY ("memberId") REFERENCES "Member"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "Expense" ADD CONSTRAINT "Expense_matchId_fkey" FOREIGN KEY ("matchId") REFERENCES "Match"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "JerseyOrder" ADD CONSTRAINT "JerseyOrder_memberId_fkey" FOREIGN KEY ("memberId") REFERENCES "Member"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "PlayerMatchStat" ADD CONSTRAINT "PlayerMatchStat_matchId_fkey" FOREIGN KEY ("matchId") REFERENCES "Match"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "PlayerMatchStat" ADD CONSTRAINT "PlayerMatchStat_memberId_fkey" FOREIGN KEY ("memberId") REFERENCES "Member"("id") ON DELETE CASCADE ON UPDATE CASCADE;

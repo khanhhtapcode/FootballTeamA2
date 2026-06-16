@@ -138,6 +138,19 @@ export async function createMatch(input: CreateMatchInput) {
           assists: stat.assists,
         })),
       },
+      expense:
+        pitchFee > 0
+          ? {
+              create: {
+                date,
+                category: "Tiền sân",
+                description: `Tiền sân trận gặp ${opponent}`,
+                amount: pitchFee,
+                source: "Quỹ đội",
+                notes: "Tự động tạo từ Lịch sử trận đấu",
+              },
+            }
+          : undefined,
     },
     include: {
       playerStats: {
@@ -145,22 +158,202 @@ export async function createMatch(input: CreateMatchInput) {
           member: true,
         },
       },
+      expense: true,
     },
   })
 
-  // Tự tạo chi phí nếu có tiền sân
-  if (pitchFee > 0) {
-    await db.expense.create({
-      data: {
-        date,
-        category: "Tiền sân",
-        description: `Tiền sân trận gặp ${opponent}`,
-        amount: pitchFee,
-        source: "Quỹ đội",
-        notes: "Tự động tạo từ Lịch sử trận đấu",
-      },
-    })
+  return match
+}
+
+export async function updateMatch(id: number, input: CreateMatchInput) {
+  if (!id || Number.isNaN(id)) {
+    throw new ApiError(400, "ID trận đấu không hợp lệ")
   }
 
-  return match
+  const existingMatch = await db.match.findUnique({
+    where: { id },
+  })
+
+  if (!existingMatch) {
+    throw new ApiError(404, "Không tìm thấy trận đấu")
+  }
+
+  const date = new Date(input.date as string)
+  const opponent = input.opponent?.toString().trim()
+  const location = input.location?.toString() || null
+  const score = input.score?.toString() || null
+  const result = input.result?.toString()
+  const playersCount = parseOptionalInt(input.playersCount, NaN)
+  const pitchFee = parseOptionalInt(input.pitchFee, 0)
+  const scorers = input.scorers?.toString() || null
+  const notes = input.notes?.toString() || null
+  const normalizedPlayerStats = normalizePlayerStats(input.playerStats)
+
+  if (Number.isNaN(date.getTime())) {
+    throw new ApiError(400, "Ngày thi đấu không hợp lệ")
+  }
+
+  if (!opponent) {
+    throw new ApiError(400, "Tên đối thủ không được để trống")
+  }
+
+  if (!result) {
+    throw new ApiError(400, "Chưa chọn kết quả trận đấu")
+  }
+
+  if (Number.isNaN(playersCount) || playersCount < 1) {
+    throw new ApiError(400, "Số cầu thủ không hợp lệ")
+  }
+
+  if (Number.isNaN(pitchFee) || pitchFee < 0) {
+    throw new ApiError(400, "Tiền sân không hợp lệ")
+  }
+
+  if (normalizedPlayerStats.length > 0) {
+    const memberIds = normalizedPlayerStats.map((stat) => stat.memberId)
+
+    const existingMembersCount = await db.member.count({
+      where: {
+        id: {
+          in: memberIds,
+        },
+      },
+    })
+
+    if (existingMembersCount !== memberIds.length) {
+      throw new ApiError(400, "Có cầu thủ trong thống kê không tồn tại")
+    }
+  }
+
+  const updatedMatch = await db.$transaction(async (tx) => {
+    await tx.playerMatchStat.deleteMany({
+      where: {
+        matchId: id,
+      },
+    })
+
+    const updated = await tx.match.update({
+      where: {
+        id,
+      },
+      data: {
+        date,
+        opponent,
+        location,
+        score,
+        result,
+        playersCount,
+        pitchFee,
+        scorers,
+        notes,
+        playerStats: {
+          create: normalizedPlayerStats.map((stat) => ({
+            memberId: stat.memberId,
+            goals: stat.goals,
+            assists: stat.assists,
+          })),
+        },
+      },
+      include: {
+        playerStats: {
+          include: {
+            member: true,
+          },
+        },
+        expense: true,
+      },
+    })
+
+    const existingExpense = await tx.expense.findUnique({
+      where: {
+        matchId: id,
+      },
+    })
+
+    if (pitchFee > 0) {
+      if (existingExpense) {
+        await tx.expense.update({
+          where: {
+            matchId: id,
+          },
+          data: {
+            date,
+            category: "Tiền sân",
+            description: `Tiền sân trận gặp ${opponent}`,
+            amount: pitchFee,
+            source: "Quỹ đội",
+            notes: "Tự động cập nhật từ Lịch sử trận đấu",
+          },
+        })
+      } else {
+        await tx.expense.create({
+          data: {
+            date,
+            category: "Tiền sân",
+            description: `Tiền sân trận gặp ${opponent}`,
+            amount: pitchFee,
+            source: "Quỹ đội",
+            notes: "Tự động tạo từ Lịch sử trận đấu",
+            matchId: id,
+          },
+        })
+      }
+    } else if (existingExpense) {
+      await tx.expense.delete({
+        where: {
+          matchId: id,
+        },
+      })
+    }
+
+    return tx.match.findUnique({
+      where: {
+        id,
+      },
+      include: {
+        playerStats: {
+          include: {
+            member: true,
+          },
+        },
+        expense: true,
+      },
+    })
+  })
+
+  return updatedMatch
+}
+
+export async function deleteMatch(id: number) {
+  if (!id || Number.isNaN(id)) {
+    throw new ApiError(400, "ID trận đấu không hợp lệ")
+  }
+
+  const existingMatch = await db.match.findUnique({
+    where: {
+      id,
+    },
+  })
+
+  if (!existingMatch) {
+    throw new ApiError(404, "Không tìm thấy trận đấu")
+  }
+
+  await db.$transaction(async (tx) => {
+    await tx.expense.deleteMany({
+      where: {
+        matchId: id,
+      },
+    })
+
+    await tx.match.delete({
+      where: {
+        id,
+      },
+    })
+  })
+
+  return {
+    success: true,
+  }
 }
