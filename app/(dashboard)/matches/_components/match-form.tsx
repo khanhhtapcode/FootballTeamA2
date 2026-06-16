@@ -81,8 +81,9 @@ export function MatchForm() {
             result: formData.get("result"),
             playersCount: formData.get("playersCount"),
             pitchFee: formData.get("pitchFee"),
-            scorers: formData.get("scorers"), // Vẫn giữ dạng text nếu bạn muốn
-            playerStats: validStats // Gửi kèm mảng thống kê chi tiết
+            scorers: formData.get("scorers"),
+            notes: formData.get("notes"),
+            playerStats: validStats,
           },
         })
         toast.success("Thêm trận đấu thành công")
@@ -188,6 +189,18 @@ export function MatchForm() {
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="scorers" className="text-right text-sm font-semibold">Ghi bàn (Tóm tắt)</Label>
               <Input id="scorers" name="scorers" placeholder="VD: Cường(2), Tuấn(1)" className="col-span-3 h-10 border-border bg-background/50" />
+            </div>
+            
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="notes" className="text-right text-sm font-semibold">
+                Ghi chú
+              </Label>
+              <Input
+                id="notes"
+                name="notes"
+                placeholder="VD: Trận đấu hay, thiếu người, thời tiết xấu..."
+                className="col-span-3 h-10 border-border bg-background/50"
+              />
             </div>
 
             {/* --- KHU VỰC MỚI: THỐNG KÊ CHI TIẾT --- */}

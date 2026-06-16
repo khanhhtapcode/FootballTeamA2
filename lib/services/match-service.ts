@@ -11,8 +11,65 @@ export type CreateMatchInput = {
   pitchFee?: number | string | null
   scorers?: string | null
   notes?: string | null
-  // Thêm trường này để nhận dữ liệu thống kê từ Frontend
-  playerStats?: { memberId: number; goals: number; assists: number }[] | null
+  playerStats?: {
+    memberId: number | string
+    goals: number | string
+    assists: number | string
+  }[] | null
+}
+
+function parseOptionalInt(value: number | string | null | undefined, fallback = 0) {
+  if (value === null || value === undefined || value === "") {
+    return fallback
+  }
+
+  const parsed = parseInt(value.toString(), 10)
+  return parsed
+}
+
+function normalizePlayerStats(inputStats: CreateMatchInput["playerStats"]) {
+  const statMap = new Map<number, { memberId: number; goals: number; assists: number }>()
+
+  for (const stat of inputStats || []) {
+    const memberId = parseOptionalInt(stat.memberId, NaN)
+    const goals = parseOptionalInt(stat.goals, 0)
+    const assists = parseOptionalInt(stat.assists, 0)
+
+    if (Number.isNaN(memberId)) {
+      throw new ApiError(400, "Cầu thủ trong thống kê không hợp lệ")
+    }
+
+    if (Number.isNaN(goals) || goals < 0) {
+      throw new ApiError(400, "Số bàn thắng không hợp lệ")
+    }
+
+    if (Number.isNaN(assists) || assists < 0) {
+      throw new ApiError(400, "Số kiến tạo không hợp lệ")
+    }
+
+    // Không lưu dòng cả bàn thắng và kiến tạo đều bằng 0
+    if (goals === 0 && assists === 0) {
+      continue
+    }
+
+    const existing = statMap.get(memberId)
+
+    if (existing) {
+      statMap.set(memberId, {
+        memberId,
+        goals: existing.goals + goals,
+        assists: existing.assists + assists,
+      })
+    } else {
+      statMap.set(memberId, {
+        memberId,
+        goals,
+        assists,
+      })
+    }
+  }
+
+  return Array.from(statMap.values())
 }
 
 export async function createMatch(input: CreateMatchInput) {
@@ -21,36 +78,73 @@ export async function createMatch(input: CreateMatchInput) {
   const location = input.location?.toString() || null
   const score = input.score?.toString() || null
   const result = input.result?.toString()
-  const playersCount = parseInt(input.playersCount?.toString() ?? "")
-  const pitchFee = input.pitchFee ? parseInt(input.pitchFee.toString()) : 0
+  const playersCount = parseOptionalInt(input.playersCount, NaN)
+  const pitchFee = parseOptionalInt(input.pitchFee, 0)
   const scorers = input.scorers?.toString() || null
   const notes = input.notes?.toString() || null
+  const normalizedPlayerStats = normalizePlayerStats(input.playerStats)
 
-  if (Number.isNaN(date.getTime())) throw new ApiError(400, "Ngày thi đấu không hợp lệ")
-  if (!opponent) throw new ApiError(400, "Tên đối thủ không được để trống")
-  if (!result) throw new ApiError(400, "Chưa chọn kết quả trận đấu")
-  if (Number.isNaN(playersCount) || playersCount < 0) throw new ApiError(400, "Số cầu thủ không hợp lệ")
-  if (Number.isNaN(pitchFee) || pitchFee < 0) throw new ApiError(400, "Tiền sân không hợp lệ")
+  if (Number.isNaN(date.getTime())) {
+    throw new ApiError(400, "Ngày thi đấu không hợp lệ")
+  }
+
+  if (!opponent) {
+    throw new ApiError(400, "Tên đối thủ không được để trống")
+  }
+
+  if (!result) {
+    throw new ApiError(400, "Chưa chọn kết quả trận đấu")
+  }
+
+  if (Number.isNaN(playersCount) || playersCount < 1) {
+    throw new ApiError(400, "Số cầu thủ không hợp lệ")
+  }
+
+  if (Number.isNaN(pitchFee) || pitchFee < 0) {
+    throw new ApiError(400, "Tiền sân không hợp lệ")
+  }
+
+  if (normalizedPlayerStats.length > 0) {
+    const memberIds = normalizedPlayerStats.map((stat) => stat.memberId)
+
+    const existingMembersCount = await db.member.count({
+      where: {
+        id: {
+          in: memberIds,
+        },
+      },
+    })
+
+    if (existingMembersCount !== memberIds.length) {
+      throw new ApiError(400, "Có cầu thủ trong thống kê không tồn tại")
+    }
+  }
 
   const match = await db.match.create({
-    data: { 
-      date, 
-      opponent, 
-      location, 
-      score, 
-      result, 
-      playersCount, 
-      pitchFee, 
-      scorers, 
+    data: {
+      date,
+      opponent,
+      location,
+      score,
+      result,
+      playersCount,
+      pitchFee,
+      scorers,
       notes,
-      // Lưu danh sách thống kê cầu thủ vào bảng PlayerMatchStat
       playerStats: {
-        create: input.playerStats?.map(stat => ({
+        create: normalizedPlayerStats.map((stat) => ({
           memberId: stat.memberId,
           goals: stat.goals,
-          assists: stat.assists
-        })) || []
-      }
+          assists: stat.assists,
+        })),
+      },
+    },
+    include: {
+      playerStats: {
+        include: {
+          member: true,
+        },
+      },
     },
   })
 

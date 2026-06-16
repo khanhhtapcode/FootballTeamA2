@@ -4,8 +4,9 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Trophy, Medal, Flame } from "lucide-react"
+import { Trophy, Medal, Flame, User } from "lucide-react"
 import { apiFetch } from "@/lib/api-client"
+import Image from "next/image"
 
 // Định nghĩa kiểu dữ liệu trả về từ API
 type PlayerStat = {
@@ -13,6 +14,7 @@ type PlayerStat = {
   fullName: string;
   position: string | null;
   jerseyNumber: number | null;
+  avatarUrl: string | null
   totalGoals: number;
   totalAssists: number;
 }
@@ -131,19 +133,47 @@ export default function StatsPage() {
                       <TableCell className="text-center font-medium">
                         {renderRankIcon(index)}
                       </TableCell>
+
                       <TableCell>
-                        <div className="font-semibold">{stat.fullName}</div>
-                        <div className="text-xs text-muted-foreground">{stat.position || "Chưa cập nhật"}</div>
+                        <div className="flex items-center gap-3">
+                          <div className="relative w-10 h-10 rounded-full overflow-hidden border border-primary/20 bg-primary/10 flex items-center justify-center shrink-0">
+                            {stat.avatarUrl ? (
+                              <Image
+                                src={stat.avatarUrl}
+                                alt={stat.fullName}
+                                fill
+                                className="object-cover"
+                                sizes="40px"
+                              />
+                            ) : (
+                              <User className="w-4 h-4 text-primary/70" />
+                            )}
+                          </div>
+
+                          <div>
+                            <div className="font-semibold text-foreground">
+                              {stat.fullName}
+                            </div>
+
+                            <div className="text-xs text-muted-foreground">
+                              {stat.position || "Chưa cập nhật"}
+                            </div>
+                          </div>
+                        </div>
                       </TableCell>
+
                       <TableCell className="text-center text-muted-foreground">
                         {stat.jerseyNumber ? `#${stat.jerseyNumber}` : "-"}
                       </TableCell>
+
                       <TableCell className="text-center text-lg font-bold text-green-600 dark:text-green-500">
                         {stat.totalGoals}
                       </TableCell>
+
                       <TableCell className="text-center text-lg font-bold text-blue-600 dark:text-blue-500">
                         {stat.totalAssists}
                       </TableCell>
+
                       <TableCell className="text-center text-lg font-extrabold">
                         {stat.totalGoals + stat.totalAssists}
                       </TableCell>

@@ -13,6 +13,7 @@ export async function getMonthlyPlayerStats(month: number, year: number) {
       fullName: true,
       position: true,
       jerseyNumber: true,
+      avatarUrl: true,
       matchStats: {
         where: {
           match: {
@@ -42,6 +43,7 @@ export async function getMonthlyPlayerStats(month: number, year: number) {
       fullName: member.fullName,
       position: member.position,
       jerseyNumber: member.jerseyNumber,
+      avatarUrl: member.avatarUrl,
       totalGoals,
       totalAssists,
     };
