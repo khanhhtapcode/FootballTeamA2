@@ -11,6 +11,8 @@ export type CreateMatchInput = {
   pitchFee?: number | string | null
   scorers?: string | null
   notes?: string | null
+  // Thêm trường này để nhận dữ liệu thống kê từ Frontend
+  playerStats?: { memberId: number; goals: number; assists: number }[] | null
 }
 
 export async function createMatch(input: CreateMatchInput) {
@@ -31,7 +33,25 @@ export async function createMatch(input: CreateMatchInput) {
   if (Number.isNaN(pitchFee) || pitchFee < 0) throw new ApiError(400, "Tiền sân không hợp lệ")
 
   const match = await db.match.create({
-    data: { date, opponent, location, score, result, playersCount, pitchFee, scorers, notes },
+    data: { 
+      date, 
+      opponent, 
+      location, 
+      score, 
+      result, 
+      playersCount, 
+      pitchFee, 
+      scorers, 
+      notes,
+      // Lưu danh sách thống kê cầu thủ vào bảng PlayerMatchStat
+      playerStats: {
+        create: input.playerStats?.map(stat => ({
+          memberId: stat.memberId,
+          goals: stat.goals,
+          assists: stat.assists
+        })) || []
+      }
+    },
   })
 
   // Tự tạo chi phí nếu có tiền sân

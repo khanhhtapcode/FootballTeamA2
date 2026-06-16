@@ -20,6 +20,8 @@ model Member {
   
   fundRecords  FundRecord[]
   jerseyOrders JerseyOrder[]
+
+  matchStats   PlayerMatchStat[]
   
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
@@ -48,6 +50,7 @@ model Match {
   pitchFee       Int       @default(0)
   scorers        String?   // comma separated or JSON
   notes          String?
+  playerStats  PlayerMatchStat[]
   
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
@@ -94,4 +97,18 @@ model Schedule {
   
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
+}
+
+model PlayerMatchStat {
+  id        Int     @id @default(autoincrement())
+  matchId   Int
+  memberId  Int
+  goals     Int     @default(0) // Số bàn thắng
+  assists   Int     @default(0) // Số kiến tạo
+
+  match     Match   @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  member    Member  @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  // Đảm bảo mỗi thành viên chỉ có 1 bản ghi thống kê cho mỗi trận
+  @@unique([matchId, memberId])
 }
