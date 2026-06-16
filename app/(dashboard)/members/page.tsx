@@ -2,19 +2,22 @@ import { db } from "@/lib/db"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { MemberForm } from "./_components/member-form"
 import { MemberStatusSelect } from "./_components/member-status-select"
-import { Users, LayoutGrid, List, Phone, Calendar, Shirt } from "lucide-react"
+import { Users, LayoutGrid, List, Phone, Calendar, Shirt, User } from "lucide-react"
 import Link from "next/link"
 import { MEMBER_POSITIONS } from "@/lib/constants"
+import Image from "next/image"
+import { DeleteMemberButton } from "./_components/delete-member-button"
 
 interface RosterMember {
   id: number
   fullName: string
   position: string | null
-  jerseyNumber: number | null
+  jerseyNumber: number | null 
   phone: string | null
   joinDate: Date
   status: string
   lineupPosition: string | null
+  avatarUrl: string | null // Thêm trường lưu ảnh
 }
 
 type Props = {
@@ -72,6 +75,7 @@ export default async function MembersPage({ searchParams }: Props) {
           </div>
         </div>
         <div className="flex items-center gap-3 self-end sm:self-auto">
+          {/* NÚT THÊM MỚI THÀNH VIÊN */}
           <MemberForm />
         </div>
       </div>
@@ -155,10 +159,19 @@ export default async function MembersPage({ searchParams }: Props) {
 
                 {/* Top content */}
                 <div className="space-y-3 relative z-10">
-                  <div className="flex items-start">
+                  <div className="flex items-start justify-between">
                     <span className={`px-2.5 py-0.5 text-[10px] uppercase font-black tracking-wider rounded-md border ${posBadgeColor}`}>
                       {member.position || "UT"}
                     </span>
+                    
+                    {/* Hiển thị Avatar góc trên phải */}
+                    <div className="w-12 h-12 rounded-full border-2 border-background/50 overflow-hidden bg-muted flex items-center justify-center shadow-sm relative">
+                      {member.avatarUrl ? (
+                        <Image src={member.avatarUrl} alt="Avatar" fill className="object-cover" sizes="48px" />
+                      ) : (
+                        <User className="w-6 h-6 text-muted-foreground/50" />
+                      )}
+                    </div>
                   </div>
                   
                   <div>
@@ -189,14 +202,19 @@ export default async function MembersPage({ searchParams }: Props) {
 
                   <div className="pt-2 border-t border-border/40 flex items-center justify-between gap-2">
                     <MemberStatusSelect id={member.id} currentStatus={member.status} />
-                    {member.jerseyNumber !== null ? (
-                      <span className="flex items-center gap-1 h-8 px-2.5 text-xs font-black text-primary bg-primary/10 border border-primary/20 rounded-full shrink-0">
-                        <Shirt className="w-3.5 h-3.5" />
-                        #{member.jerseyNumber}
-                      </span>
-                    ) : (
-                      <span className="text-xs text-muted-foreground font-semibold h-8 flex items-center px-2 shrink-0">N/A</span>
-                    )}
+                    
+                    <div className="flex items-center gap-1">
+                      {member.jerseyNumber !== null && (
+                        <span className="flex items-center gap-1 h-8 px-2.5 text-xs font-black text-primary bg-primary/10 border border-primary/20 rounded-full shrink-0">
+                          <Shirt className="w-3.5 h-3.5" />
+                          #{member.jerseyNumber}
+                        </span>
+                      )}
+                      
+                      {/* NÚT SỬA VÀ XÓA NẰM CẠNH NHAU TRONG DẠNG GRID */}
+                      <MemberForm member={member} />
+                      <DeleteMemberButton id={member.id} name={member.fullName} />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -216,7 +234,8 @@ export default async function MembersPage({ searchParams }: Props) {
                   <TableHead className="font-bold text-foreground text-center">Số áo</TableHead>
                   <TableHead className="font-bold text-foreground">Số điện thoại</TableHead>
                   <TableHead className="font-bold text-foreground">Ngày tham gia</TableHead>
-                  <TableHead className="w-44 font-bold text-foreground text-right">Trạng thái</TableHead>
+                  <TableHead className="font-bold text-foreground">Trạng thái</TableHead>
+                  <TableHead className="w-24 font-bold text-foreground text-center">Thao tác</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -225,7 +244,21 @@ export default async function MembersPage({ searchParams }: Props) {
                   return (
                     <TableRow key={member.id} className="hover:bg-muted/30 border-b border-border/40 transition-colors">
                       <TableCell className="text-center font-semibold text-muted-foreground">{index + 1}</TableCell>
-                      <TableCell className="font-extrabold text-foreground text-base">{member.fullName}</TableCell>
+                      
+                      {/* Tên kèm Avatar thu nhỏ */}
+                      <TableCell className="font-extrabold text-foreground text-base">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full border border-border overflow-hidden bg-muted flex items-center justify-center shrink-0 relative">
+                            {member.avatarUrl ? (
+                              <Image src={member.avatarUrl} alt="Avatar" fill className="object-cover" sizes="32px" />
+                            ) : (
+                              <User className="w-4 h-4 text-muted-foreground/50" />
+                            )}
+                          </div>
+                          <span>{member.fullName}</span>
+                        </div>
+                      </TableCell>
+                      
                       <TableCell>
                         <span className={`px-2.5 py-0.5 text-xs font-bold rounded-lg border inline-block ${posBadgeColor}`}>
                           {member.position || "Chưa chọn"}
@@ -247,8 +280,16 @@ export default async function MembersPage({ searchParams }: Props) {
                       <TableCell className="text-sm text-muted-foreground font-medium">
                         {new Date(member.joinDate).toLocaleDateString('vi-VN')}
                       </TableCell>
-                      <TableCell className="flex justify-end py-2.5">
+                      <TableCell className="py-2.5">
                         <MemberStatusSelect id={member.id} currentStatus={member.status} />
+                      </TableCell>
+                      
+                      {/* NÚT SỬA VÀ XÓA NẰM CẠNH NHAU TRONG DẠNG LIST */}
+                      <TableCell className="text-center">
+                        <div className="flex justify-center items-center gap-1">
+                          <MemberForm member={member} />
+                          <DeleteMemberButton id={member.id} name={member.fullName} />
+                        </div>
                       </TableCell>
                     </TableRow>
                   )

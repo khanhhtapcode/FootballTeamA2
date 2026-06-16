@@ -45,6 +45,7 @@ export default async function DashboardPage() {
         jerseyNumber: true,
         lineupPosition: true,
         position: true,
+        avatarUrl: true,
       },
       orderBy: { fullName: "asc" },
     }),

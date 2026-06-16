@@ -17,10 +17,10 @@ model Member {
   status       String        @default("Hoạt động") // Hoạt động, Tạm nghỉ, Giải nghệ
   notes        String?
   lineupPosition String?
+  avatarUrl      String?
   
   fundRecords  FundRecord[]
   jerseyOrders JerseyOrder[]
-
   matchStats   PlayerMatchStat[]
   
   createdAt    DateTime      @default(now())
