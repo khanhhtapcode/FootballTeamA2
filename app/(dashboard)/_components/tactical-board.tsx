@@ -22,48 +22,104 @@ type Props = {
   activeMembers: Member[]
 }
 
-const POSITIONS = [
+type PositionItem = {
+  id: string
+  label: string
+  name: string
+  className: string
+}
+
+type FormationItem = {
+  id: string
+  name: string
+  description: string
+  positions: PositionItem[]
+}
+
+const FORMATIONS: FormationItem[] = [
   {
-    id: "GK",
-    label: "GK",
-    name: "Thủ môn",
-    className: "left-[8%] top-1/2 -translate-y-1/2",
+    id: "3-2-1",
+    name: "3-2-1",
+    description: "Cân bằng, phòng ngự chắc",
+    positions: [
+      { id: "GK", label: "GK", name: "Thủ môn", className: "left-[8%] top-1/2 -translate-y-1/2" },
+      { id: "DF_L", label: "DFL", name: "Hậu vệ trái", className: "left-[25%] top-[20%] -translate-y-1/2" },
+      { id: "DF_C", label: "DFC", name: "Trung vệ", className: "left-[28%] top-1/2 -translate-y-1/2" },
+      { id: "DF_R", label: "DFR", name: "Hậu vệ phải", className: "left-[25%] top-[80%] -translate-y-1/2" },
+      { id: "MF_L", label: "MFL", name: "Tiền vệ trái", className: "left-[48%] top-[25%] -translate-y-1/2" },
+      { id: "MF_R", label: "MFR", name: "Tiền vệ phải", className: "left-[48%] top-[75%] -translate-y-1/2" },
+      { id: "ST", label: "ST", name: "Tiền đạo", className: "right-[15%] top-1/2 -translate-y-1/2" },
+    ],
   },
   {
-    id: "DF_L",
-    label: "DFL",
-    name: "Hậu vệ trái",
-    className: "left-[25%] top-[20%] -translate-y-1/2",
+    id: "2-3-1",
+    name: "2-3-1",
+    description: "Phổ biến, kiểm soát giữa sân tốt",
+    positions: [
+      { id: "GK", label: "GK", name: "Thủ môn", className: "left-[8%] top-1/2 -translate-y-1/2" },
+      { id: "DF_L", label: "DFL", name: "Hậu vệ trái", className: "left-[27%] top-[32%] -translate-y-1/2" },
+      { id: "DF_R", label: "DFR", name: "Hậu vệ phải", className: "left-[27%] top-[68%] -translate-y-1/2" },
+      { id: "MF_L", label: "MFL", name: "Tiền vệ trái", className: "left-[50%] top-[22%] -translate-y-1/2" },
+      { id: "MF_C", label: "MFC", name: "Tiền vệ trung tâm", className: "left-[50%] top-1/2 -translate-y-1/2" },
+      { id: "MF_R", label: "MFR", name: "Tiền vệ phải", className: "left-[50%] top-[78%] -translate-y-1/2" },
+      { id: "ST", label: "ST", name: "Tiền đạo", className: "right-[15%] top-1/2 -translate-y-1/2" },
+    ],
   },
   {
-    id: "DF_C",
-    label: "DFC",
-    name: "Trung vệ",
-    className: "left-[28%] top-1/2 -translate-y-1/2",
+    id: "2-1-2-1",
+    name: "2-1-2-1",
+    description: "Có tiền vệ trụ, dễ luân chuyển bóng",
+    positions: [
+      { id: "GK", label: "GK", name: "Thủ môn", className: "left-[8%] top-1/2 -translate-y-1/2" },
+      { id: "DF_L", label: "DFL", name: "Hậu vệ trái", className: "left-[25%] top-[32%] -translate-y-1/2" },
+      { id: "DF_R", label: "DFR", name: "Hậu vệ phải", className: "left-[25%] top-[68%] -translate-y-1/2" },
+      { id: "DM", label: "DM", name: "Tiền vệ trụ", className: "left-[43%] top-1/2 -translate-y-1/2" },
+      { id: "AM_L", label: "AML", name: "Hộ công trái", className: "left-[60%] top-[30%] -translate-y-1/2" },
+      { id: "AM_R", label: "AMR", name: "Hộ công phải", className: "left-[60%] top-[70%] -translate-y-1/2" },
+      { id: "ST", label: "ST", name: "Tiền đạo", className: "right-[12%] top-1/2 -translate-y-1/2" },
+    ],
   },
   {
-    id: "DF_R",
-    label: "DFR",
-    name: "Hậu vệ phải",
-    className: "left-[25%] top-[80%] -translate-y-1/2",
+    id: "3-1-2",
+    name: "3-1-2",
+    description: "Phòng ngự chắc, phản công nhanh",
+    positions: [
+      { id: "GK", label: "GK", name: "Thủ môn", className: "left-[8%] top-1/2 -translate-y-1/2" },
+      { id: "DF_L", label: "DFL", name: "Hậu vệ trái", className: "left-[25%] top-[20%] -translate-y-1/2" },
+      { id: "DF_C", label: "DFC", name: "Trung vệ", className: "left-[28%] top-1/2 -translate-y-1/2" },
+      { id: "DF_R", label: "DFR", name: "Hậu vệ phải", className: "left-[25%] top-[80%] -translate-y-1/2" },
+      { id: "DM", label: "DM", name: "Tiền vệ trụ", className: "left-[50%] top-1/2 -translate-y-1/2" },
+      { id: "ST_L", label: "STL", name: "Tiền đạo trái", className: "right-[15%] top-[35%] -translate-y-1/2" },
+      { id: "ST_R", label: "STR", name: "Tiền đạo phải", className: "right-[15%] top-[65%] -translate-y-1/2" },
+    ],
   },
   {
-    id: "MF_L",
-    label: "MFL",
-    name: "Tiền vệ trái",
-    className: "left-[48%] top-[25%] -translate-y-1/2",
+    id: "2-2-2",
+    name: "2-2-2",
+    description: "Dễ đá, chia đều các tuyến",
+    positions: [
+      { id: "GK", label: "GK", name: "Thủ môn", className: "left-[8%] top-1/2 -translate-y-1/2" },
+      { id: "DF_L", label: "DFL", name: "Hậu vệ trái", className: "left-[27%] top-[35%] -translate-y-1/2" },
+      { id: "DF_R", label: "DFR", name: "Hậu vệ phải", className: "left-[27%] top-[65%] -translate-y-1/2" },
+      { id: "MF_L", label: "MFL", name: "Tiền vệ trái", className: "left-[50%] top-[35%] -translate-y-1/2" },
+      { id: "MF_R", label: "MFR", name: "Tiền vệ phải", className: "left-[50%] top-[65%] -translate-y-1/2" },
+      { id: "ST_L", label: "STL", name: "Tiền đạo trái", className: "right-[15%] top-[35%] -translate-y-1/2" },
+      { id: "ST_R", label: "STR", name: "Tiền đạo phải", className: "right-[15%] top-[65%] -translate-y-1/2" },
+    ],
   },
   {
-    id: "MF_R",
-    label: "MFR",
-    name: "Tiền vệ phải",
-    className: "left-[48%] top-[75%] -translate-y-1/2",
-  },
-  {
-    id: "ST",
-    label: "ST",
-    name: "Tiền đạo",
-    className: "right-[15%] top-1/2 -translate-y-1/2",
+    id: "1-3-2",
+    name: "1-3-2",
+    description: "Tấn công mạnh, cần hậu vệ chắc",
+    positions: [
+      { id: "GK", label: "GK", name: "Thủ môn", className: "left-[8%] top-1/2 -translate-y-1/2" },
+      { id: "SW", label: "SW", name: "Hậu vệ quét", className: "left-[25%] top-1/2 -translate-y-1/2" },
+      { id: "MF_L", label: "MFL", name: "Tiền vệ trái", className: "left-[48%] top-[25%] -translate-y-1/2" },
+      { id: "MF_C", label: "MFC", name: "Tiền vệ trung tâm", className: "left-[48%] top-1/2 -translate-y-1/2" },
+      { id: "MF_R", label: "MFR", name: "Tiền vệ phải", className: "left-[48%] top-[75%] -translate-y-1/2" },
+      { id: "ST_L", label: "STL", name: "Tiền đạo trái", className: "right-[15%] top-[35%] -translate-y-1/2" },
+      { id: "ST_R", label: "STR", name: "Tiền đạo phải", className: "right-[15%] top-[65%] -translate-y-1/2" },
+    ],
   },
 ]
 
@@ -72,6 +128,20 @@ export function TacticalBoard({ activeMembers }: Props) {
 
   const [members, setMembers] = React.useState<Member[]>(activeMembers)
   const [updatingPosition, setUpdatingPosition] = React.useState<string | null>(null)
+  const [formationId, setFormationId] = React.useState("3-2-1")
+
+  React.useEffect(() => {
+    const savedFormation = window.localStorage.getItem("football-formation")
+
+    if (savedFormation && FORMATIONS.some((formation) => formation.id === savedFormation)) {
+      setFormationId(savedFormation)
+    }
+  }, [])
+
+  const currentFormation =
+    FORMATIONS.find((formation) => formation.id === formationId) || FORMATIONS[0]
+
+  const POSITIONS = currentFormation.positions
 
   React.useEffect(() => {
     setMembers(activeMembers)
@@ -79,7 +149,69 @@ export function TacticalBoard({ activeMembers }: Props) {
 
   const getLineupLabel = (positionId: string | null) => {
     if (!positionId) return "Dự bị"
-    return POSITIONS.find((position) => position.id === positionId)?.label || positionId
+
+    for (const formation of FORMATIONS) {
+      const found = formation.positions.find((position) => position.id === positionId)
+      if (found) return found.label
+    }
+
+    return positionId   
+  }
+
+  const handleChangeFormation = async (nextFormationId: string) => {
+    if (updatingPosition) return
+
+    const nextFormation = FORMATIONS.find((formation) => formation.id === nextFormationId)
+    if (!nextFormation) return
+
+    const previousFormationId = formationId
+
+    const validPositionIds = nextFormation.positions.map((position) => position.id)
+
+    const playersNeedReset = members.filter(
+      (member) => member.lineupPosition && !validPositionIds.includes(member.lineupPosition)
+    )
+
+    setFormationId(nextFormationId)
+    window.localStorage.setItem("football-formation", nextFormationId)
+
+    // Các cầu thủ đang ở vị trí không thuộc sơ đồ mới sẽ được đưa về dự bị
+    if (playersNeedReset.length === 0) return
+
+    const beforeUpdate = members
+
+    setMembers((currentMembers) =>
+      currentMembers.map((member) =>
+        member.lineupPosition && !validPositionIds.includes(member.lineupPosition)
+          ? { ...member, lineupPosition: null }
+          : member
+      )
+    )
+
+    setUpdatingPosition("formation")
+
+    try {
+      await Promise.all(
+        playersNeedReset.map((member) =>
+          apiFetch(`/api/members/${member.id}`, {
+            method: "PATCH",
+            body: {
+              lineupPosition: null,
+            },
+          })
+        )
+      )
+
+      toast.success("Đã đổi sơ đồ và đưa cầu thủ không phù hợp về dự bị!")
+      router.refresh()
+    } catch (error) {
+      setMembers(beforeUpdate)
+      setFormationId(previousFormationId)
+      window.localStorage.setItem("football-formation", previousFormationId)
+      toast.error(error instanceof Error ? error.message : "Lỗi khi đổi sơ đồ")
+    } finally {
+      setUpdatingPosition(null)
+    }
   }
 
   const handleSelectPlayer = async (positionId: string, memberIdStr: string) => {
@@ -212,13 +344,60 @@ export function TacticalBoard({ activeMembers }: Props) {
           </span>
 
           <p className="text-[10px] text-muted-foreground font-mono uppercase">
-            Lựa chọn cầu thủ ra sân cho từng vị trí (Sơ đồ 3-2-1)
+            Lựa chọn cầu thủ ra sân cho từng vị trí (Sơ đồ {currentFormation.name})
           </p>
         </div>
 
-        <span className="text-[9px] bg-primary/10 border border-primary/20 text-primary px-2 py-0.5 rounded font-mono font-bold">
-          TACTICS BOARD
-        </span>
+        <div className="flex items-center gap-2">
+          <div className="text-right hidden sm:block">
+            <p className="text-[9px] font-mono text-muted-foreground uppercase">
+              Sơ đồ hiện tại
+            </p>
+            <p className="text-xs font-bold text-primary">
+              {currentFormation.name}
+            </p>
+          </div>
+
+          <SelectPrimitive.Root
+            value={formationId}
+            onValueChange={handleChangeFormation}
+            disabled={Boolean(updatingPosition)}
+          >
+            <SelectPrimitive.Trigger className="h-8 min-w-[120px] px-3 rounded-lg border border-primary/20 bg-primary/10 text-primary text-xs font-bold flex items-center justify-between gap-2 outline-none hover:bg-primary/15">
+              <SelectPrimitive.Value placeholder="Chọn sơ đồ" />
+            </SelectPrimitive.Trigger>
+
+            <SelectPrimitive.Portal>
+              <SelectPrimitive.Positioner
+                align="end"
+                side="bottom"
+                sideOffset={6}
+                className="isolate z-50"
+              >
+                <SelectPrimitive.Popup className="min-w-64 rounded-xl bg-popover border border-border p-1 shadow-xl text-xs text-popover-foreground">
+                  <SelectPrimitive.List className="space-y-0.5">
+                    {FORMATIONS.map((formation) => (
+                      <SelectPrimitive.Item
+                        key={formation.id}
+                        value={formation.id}
+                        className="relative flex w-full cursor-pointer items-center rounded-lg py-2 px-3 hover:bg-muted outline-none"
+                      >
+                        <SelectPrimitive.ItemText>
+                          <span className="flex flex-col">
+                            <span className="font-bold">{formation.name}</span>
+                            <span className="text-[10px] text-muted-foreground">
+                              {formation.description}
+                            </span>
+                          </span>
+                        </SelectPrimitive.ItemText>
+                      </SelectPrimitive.Item>
+                    ))}
+                  </SelectPrimitive.List>
+                </SelectPrimitive.Popup>
+              </SelectPrimitive.Positioner>
+            </SelectPrimitive.Portal>
+          </SelectPrimitive.Root>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-5 gap-6 mt-4">

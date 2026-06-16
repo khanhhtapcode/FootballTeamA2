@@ -2,7 +2,27 @@ import { db } from "@/lib/db"
 import { ApiError } from "@/lib/api"
 import { FUND_STATUS } from "@/lib/constants"
 
-const VALID_LINEUP_POSITIONS = ["GK", "DF_L", "DF_C", "DF_R", "MF_L", "MF_R", "ST"]
+const VALID_LINEUP_POSITIONS = [
+  "GK",
+
+  "DF_L",
+  "DF_C",
+  "DF_R",
+
+  "MF_L",
+  "MF_C",
+  "MF_R",
+
+  "DM",
+  "AM_L",
+  "AM_R",
+
+  "ST",
+  "ST_L",
+  "ST_R",
+
+  "SW",
+]
 
 export type CreateMemberInput = {
   fullName?: string | null
