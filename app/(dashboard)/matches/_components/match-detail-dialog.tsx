@@ -34,6 +34,8 @@ type MatchDetail = {
   pitchFee: number
   scorers: string | null
   notes: string | null
+  expenseSource?: string | null
+  expenseSpender?: string | null
   playerStats: {
     id: number
     goals: number
@@ -60,6 +62,12 @@ export function MatchDetailDialog({ match, feePerPerson }: Props) {
 
   const isWin = match.result === "Thắng"
   const isLoss = match.result === "Thua"
+  const pitchFeePayer =
+    match.pitchFee <= 0
+      ? "Không phát sinh"
+      : match.expenseSource === "Cá nhân"
+        ? match.expenseSpender || "Chưa chọn"
+        : "Quỹ đội"
 
   return (
     <Dialog>
@@ -317,6 +325,15 @@ export function MatchDetailDialog({ match, feePerPerson }: Props) {
                 </span>
               </div>
             </div>
+            <div className="mt-3 pt-3 border-t border-border/40 flex items-center justify-between text-xs">
+              <span className="text-muted-foreground font-medium">
+                Người trả phí sân
+              </span>
+
+              <span className="font-bold text-foreground">
+                {pitchFeePayer}
+              </span>
+            </div>
           </div>
 
           {/* Notes */}
@@ -333,6 +350,6 @@ export function MatchDetailDialog({ match, feePerPerson }: Props) {
           )}
         </div>
       </DialogContent>
-    </Dialog>
+    </Dialog> 
   )
 }

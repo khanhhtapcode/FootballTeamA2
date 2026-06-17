@@ -11,12 +11,16 @@ export type CreateMatchInput = {
   pitchFee?: number | string | null
   scorers?: string | null
   notes?: string | null
+  expenseSource?: string | null
+  expenseSpender?: string | null
   playerStats?: {
     memberId: number | string
     goals: number | string
     assists: number | string
   }[] | null
 }
+
+const VALID_MATCH_EXPENSE_SOURCES = ["Quỹ đội", "Cá nhân"]
 
 function parseOptionalInt(value: number | string | null | undefined, fallback = 0) {
   if (value === null || value === undefined || value === "") {
@@ -47,7 +51,6 @@ function normalizePlayerStats(inputStats: CreateMatchInput["playerStats"]) {
       throw new ApiError(400, "Số kiến tạo không hợp lệ")
     }
 
-    // Không lưu dòng cả bàn thắng và kiến tạo đều bằng 0
     if (goals === 0 && assists === 0) {
       continue
     }
@@ -72,6 +75,47 @@ function normalizePlayerStats(inputStats: CreateMatchInput["playerStats"]) {
   return Array.from(statMap.values())
 }
 
+function normalizeMatchExpense(pitchFee: number, input: CreateMatchInput) {
+  const expenseSource = input.expenseSource?.toString() || "Quỹ đội"
+
+  const rawExpenseSpender = input.expenseSpender?.toString().trim()
+  const expenseSpender =
+    rawExpenseSpender && rawExpenseSpender !== "__none__"
+      ? rawExpenseSpender
+      : null
+
+  if (!VALID_MATCH_EXPENSE_SOURCES.includes(expenseSource)) {
+    throw new ApiError(400, "Nguồn trả phí sân không hợp lệ")
+  }
+
+  if (pitchFee > 0 && expenseSource === "Cá nhân" && !expenseSpender) {
+    throw new ApiError(400, "Vui lòng chọn người trả tiền sân")
+  }
+
+  return {
+    expenseSource,
+    expenseSpender,
+  }
+}
+
+async function validatePlayerStats(normalizedPlayerStats: ReturnType<typeof normalizePlayerStats>) {
+  if (normalizedPlayerStats.length === 0) return
+
+  const memberIds = normalizedPlayerStats.map((stat) => stat.memberId)
+
+  const existingMembersCount = await db.member.count({
+    where: {
+      id: {
+        in: memberIds,
+      },
+    },
+  })
+
+  if (existingMembersCount !== memberIds.length) {
+    throw new ApiError(400, "Có cầu thủ trong thống kê không tồn tại")
+  }
+}
+
 export async function createMatch(input: CreateMatchInput) {
   const date = new Date(input.date as string)
   const opponent = input.opponent?.toString().trim()
@@ -83,6 +127,7 @@ export async function createMatch(input: CreateMatchInput) {
   const scorers = input.scorers?.toString() || null
   const notes = input.notes?.toString() || null
   const normalizedPlayerStats = normalizePlayerStats(input.playerStats)
+  const { expenseSource, expenseSpender } = normalizeMatchExpense(pitchFee, input)
 
   if (Number.isNaN(date.getTime())) {
     throw new ApiError(400, "Ngày thi đấu không hợp lệ")
@@ -104,21 +149,7 @@ export async function createMatch(input: CreateMatchInput) {
     throw new ApiError(400, "Tiền sân không hợp lệ")
   }
 
-  if (normalizedPlayerStats.length > 0) {
-    const memberIds = normalizedPlayerStats.map((stat) => stat.memberId)
-
-    const existingMembersCount = await db.member.count({
-      where: {
-        id: {
-          in: memberIds,
-        },
-      },
-    })
-
-    if (existingMembersCount !== memberIds.length) {
-      throw new ApiError(400, "Có cầu thủ trong thống kê không tồn tại")
-    }
-  }
+  await validatePlayerStats(normalizedPlayerStats)
 
   const match = await db.match.create({
     data: {
@@ -146,7 +177,8 @@ export async function createMatch(input: CreateMatchInput) {
                 category: "Tiền sân",
                 description: `Tiền sân trận gặp ${opponent}`,
                 amount: pitchFee,
-                source: "Quỹ đội",
+                spender: expenseSource === "Cá nhân" ? expenseSpender : null,
+                source: expenseSource,
                 notes: "Tự động tạo từ Lịch sử trận đấu",
               },
             }
@@ -171,7 +203,9 @@ export async function updateMatch(id: number, input: CreateMatchInput) {
   }
 
   const existingMatch = await db.match.findUnique({
-    where: { id },
+    where: {
+      id,
+    },
   })
 
   if (!existingMatch) {
@@ -188,6 +222,7 @@ export async function updateMatch(id: number, input: CreateMatchInput) {
   const scorers = input.scorers?.toString() || null
   const notes = input.notes?.toString() || null
   const normalizedPlayerStats = normalizePlayerStats(input.playerStats)
+  const { expenseSource, expenseSpender } = normalizeMatchExpense(pitchFee, input)
 
   if (Number.isNaN(date.getTime())) {
     throw new ApiError(400, "Ngày thi đấu không hợp lệ")
@@ -209,21 +244,7 @@ export async function updateMatch(id: number, input: CreateMatchInput) {
     throw new ApiError(400, "Tiền sân không hợp lệ")
   }
 
-  if (normalizedPlayerStats.length > 0) {
-    const memberIds = normalizedPlayerStats.map((stat) => stat.memberId)
-
-    const existingMembersCount = await db.member.count({
-      where: {
-        id: {
-          in: memberIds,
-        },
-      },
-    })
-
-    if (existingMembersCount !== memberIds.length) {
-      throw new ApiError(400, "Có cầu thủ trong thống kê không tồn tại")
-    }
-  }
+  await validatePlayerStats(normalizedPlayerStats)
 
   const updatedMatch = await db.$transaction(async (tx) => {
     await tx.playerMatchStat.deleteMany({
@@ -232,7 +253,7 @@ export async function updateMatch(id: number, input: CreateMatchInput) {
       },
     })
 
-    const updated = await tx.match.update({
+    await tx.match.update({
       where: {
         id,
       },
@@ -254,14 +275,6 @@ export async function updateMatch(id: number, input: CreateMatchInput) {
           })),
         },
       },
-      include: {
-        playerStats: {
-          include: {
-            member: true,
-          },
-        },
-        expense: true,
-      },
     })
 
     const existingExpense = await tx.expense.findUnique({
@@ -281,7 +294,8 @@ export async function updateMatch(id: number, input: CreateMatchInput) {
             category: "Tiền sân",
             description: `Tiền sân trận gặp ${opponent}`,
             amount: pitchFee,
-            source: "Quỹ đội",
+            spender: expenseSource === "Cá nhân" ? expenseSpender : null,
+            source: expenseSource,
             notes: "Tự động cập nhật từ Lịch sử trận đấu",
           },
         })
@@ -292,7 +306,8 @@ export async function updateMatch(id: number, input: CreateMatchInput) {
             category: "Tiền sân",
             description: `Tiền sân trận gặp ${opponent}`,
             amount: pitchFee,
-            source: "Quỹ đội",
+            spender: expenseSource === "Cá nhân" ? expenseSpender : null,
+            source: expenseSource,
             notes: "Tự động tạo từ Lịch sử trận đấu",
             matchId: id,
           },

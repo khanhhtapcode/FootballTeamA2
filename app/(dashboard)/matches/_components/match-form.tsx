@@ -41,6 +41,8 @@ type MatchFormData = {
   pitchFee: number
   scorers: string | null
   notes: string | null
+  expenseSource?: string | null
+  expenseSpender?: string | null
   playerStats: {
     id: number
     goals: number
@@ -64,10 +66,19 @@ export function MatchForm({ match }: { match?: MatchFormData }) {
   const router = useRouter()
   const isEdit = !!match
 
-  // State lưu danh sách thành viên lấy từ API
-  const [members, setMembers] = useState<{id: number, fullName: string}[]>([])
+    // State lưu danh sách thành viên lấy từ API
+  const [members, setMembers] = useState<{
+    id: number
+    fullName: string
+    jerseyNumber: number | null
+    position: string | null
+  }[]>([])
+
   // State lưu danh sách thống kê cầu thủ đang nhập
   const [playerStats, setPlayerStats] = useState<PlayerStatInput[]>([])
+
+  // State lưu nguồn trả phí sân
+  const [expenseSource, setExpenseSource] = useState(match?.expenseSource || "Quỹ đội")
 
   // Load danh sách thành viên khi mở form
   useEffect(() => {
@@ -84,6 +95,7 @@ export function MatchForm({ match }: { match?: MatchFormData }) {
   useEffect(() => {
     if (open) {
       setDate(match?.date ? new Date(match.date) : new Date())
+      setExpenseSource(match?.expenseSource || "Quỹ đội")
 
       setPlayerStats(
         match?.playerStats?.map((stat) => ({
@@ -98,14 +110,17 @@ export function MatchForm({ match }: { match?: MatchFormData }) {
   async function onSubmit(formData: FormData) {
     startTransition(async () => {
       try {
-        // Lọc bỏ những dòng chưa chọn cầu thủ
         const validStats = playerStats
-          .filter(stat => stat.memberId !== "")
-          .map(stat => ({
-            memberId: parseInt(stat.memberId),
+          .filter((stat) => stat.memberId !== "")
+          .map((stat) => ({
+            memberId: parseInt(stat.memberId, 10),
             goals: stat.goals,
-            assists: stat.assists
-          }));
+            assists: stat.assists,
+          }))
+
+        const rawExpenseSpender = formData.get("expenseSpender")?.toString()
+        const expenseSpender =
+          rawExpenseSpender === "__none__" ? null : rawExpenseSpender
 
         const payload = {
           date: formData.get("date"),
@@ -117,6 +132,8 @@ export function MatchForm({ match }: { match?: MatchFormData }) {
           pitchFee: formData.get("pitchFee"),
           scorers: formData.get("scorers"),
           notes: formData.get("notes"),
+          expenseSource: formData.get("expenseSource"),
+          expenseSpender,
           playerStats: validStats,
         }
 
@@ -135,6 +152,7 @@ export function MatchForm({ match }: { match?: MatchFormData }) {
 
           toast.success("Thêm trận đấu thành công")
         }
+
         setOpen(false)
         router.refresh()
       } catch (error) {
@@ -296,6 +314,62 @@ export function MatchForm({ match }: { match?: MatchFormData }) {
                 className="col-span-3 h-10 border-border bg-background/50"
               />
             </div>
+
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="expenseSource" className="text-right text-sm font-semibold">
+                Phí sân do
+              </Label>
+
+              <div className="col-span-3">
+                <Select
+                  name="expenseSource"
+                  value={expenseSource}
+                  onValueChange={setExpenseSource}
+                >
+                  <SelectTrigger className="h-10 border-border bg-background/50">
+                    <SelectValue placeholder="Chọn nguồn trả phí sân" />
+                  </SelectTrigger>
+
+                  <SelectContent>
+                    <SelectItem value="Quỹ đội">Quỹ đội</SelectItem>
+                    <SelectItem value="Cá nhân">Cá nhân</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="expenseSpender" className="text-right text-sm font-semibold">
+                Người trả {expenseSource === "Cá nhân" && <span className="text-red-500">*</span>}
+              </Label>
+
+              <div className="col-span-3">
+                <Select name="expenseSpender" defaultValue={match?.expenseSpender || "__none__"}>
+                  <SelectTrigger className="h-10 border-border bg-background/50">
+                    <SelectValue placeholder="Chọn người trả tiền sân" />
+                  </SelectTrigger>
+
+                  <SelectContent>
+                    <SelectItem value="__none__">-- Chưa chọn --</SelectItem>
+
+                    {members.map((member) => (
+                      <SelectItem key={member.id} value={member.fullName}>
+                        {member.fullName}
+                        {member.jerseyNumber !== null ? ` (#${member.jerseyNumber})` : ""}
+                        {member.position ? ` - ${member.position}` : ""}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                {expenseSource === "Cá nhân" && (
+                  <p className="text-[10px] text-muted-foreground mt-1">
+                    Nếu cá nhân trả tiền sân, bắt buộc chọn thành viên đã ứng tiền.
+                  </p>
+                )}
+              </div>
+            </div>
+
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="scorers" className="text-right text-sm font-semibold">Ghi bàn (Tóm tắt)</Label>
               <Input

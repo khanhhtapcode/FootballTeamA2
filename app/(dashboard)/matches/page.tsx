@@ -42,6 +42,7 @@ export default async function MatchesPage({
       date: "desc",
     },
     include: {
+      expense: true,
       playerStats: {
         include: {
           member: {
@@ -119,6 +120,12 @@ export default async function MatchesPage({
 
             const goalStats = match.playerStats.filter((stat) => stat.goals > 0)
             const assistStats = match.playerStats.filter((stat) => stat.assists > 0)
+            const pitchFeePayer =
+              match.pitchFee <= 0
+                ? "Không phát sinh"
+                : match.expense?.source === "Cá nhân"
+                  ? match.expense.spender || "Chưa chọn"
+                  : "Quỹ đội"
 
             const scorerText =
               goalStats.length > 0
@@ -141,6 +148,8 @@ export default async function MatchesPage({
               pitchFee: match.pitchFee,
               scorers: match.scorers,
               notes: match.notes,
+              expenseSource: match.expense?.source || "Quỹ đội",
+              expenseSpender: match.expense?.spender || null,
               playerStats: match.playerStats.map((stat) => ({
                 id: stat.id,
                 goals: stat.goals,
@@ -166,6 +175,8 @@ export default async function MatchesPage({
               pitchFee: match.pitchFee,
               scorers: match.scorers,
               notes: match.notes,
+              expenseSource: match.expense?.source || "Quỹ đội",
+              expenseSpender: match.expense?.spender || null,
               playerStats: match.playerStats.map((stat) => ({
                 id: stat.id,
                 goals: stat.goals,
@@ -334,6 +345,15 @@ export default async function MatchesPage({
                           {feePerPerson.toLocaleString("vi-VN")} ₫
                         </span>
                       </div>
+                    </div>
+                    <div className="pt-2 mt-2 border-t border-border/40 text-xs flex items-center justify-between">
+                      <span className="text-muted-foreground font-medium">
+                        Người trả:
+                      </span>
+
+                      <span className="font-bold text-foreground">
+                        {pitchFeePayer}
+                      </span>
                     </div>
                   </div>
 
