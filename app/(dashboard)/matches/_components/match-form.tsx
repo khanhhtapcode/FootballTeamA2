@@ -159,6 +159,18 @@ export function MatchForm({ match }: { match?: MatchFormData }) {
     setPlayerStats(newStats)
   }
 
+  const getMemberDisplayName = (memberId: string) => {
+    if (!memberId) return "Chọn cầu thủ"
+
+    const foundMember = members.find((member) => member.id.toString() === memberId)
+
+    if (foundMember) {
+      return foundMember.fullName
+    }
+
+    return "Đang tải..."
+  }
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger render={
@@ -320,16 +332,26 @@ export function MatchForm({ match }: { match?: MatchFormData }) {
               <div className="space-y-3">
                 {playerStats.map((stat, index) => (
                   <div key={index} className="flex gap-2 items-center">
-                    <Select 
-                      value={stat.memberId} 
+                    <Select
+                      value={stat.memberId}
                       onValueChange={(val) => updateStatRow(index, "memberId", val)}
                     >
-                      <SelectTrigger className="w-[180px] h-9 bg-background/50">
-                        <SelectValue placeholder="Chọn cầu thủ" />
+                      <SelectTrigger className="w-45 h-9 bg-background/50">
+                        <span
+                          className={cn(
+                            "block truncate text-left",
+                            !stat.memberId && "text-muted-foreground"
+                          )}
+                        >
+                          {getMemberDisplayName(stat.memberId)}
+                        </span>
                       </SelectTrigger>
+
                       <SelectContent>
-                        {members.map(m => (
-                          <SelectItem key={m.id} value={m.id.toString()}>{m.fullName}</SelectItem>
+                        {members.map((member) => (
+                          <SelectItem key={member.id} value={member.id.toString()}>
+                            {member.fullName}
+                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>

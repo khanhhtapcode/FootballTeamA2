@@ -130,6 +130,9 @@ export function TacticalBoard({ activeMembers }: Props) {
   const [updatingPosition, setUpdatingPosition] = React.useState<string | null>(null)
   const [formationId, setFormationId] = React.useState("3-2-1")
 
+  const isUpdatingRef = React.useRef(false)
+  const isBoardUpdating = updatingPosition !== null
+
   React.useEffect(() => {
     const savedFormation = window.localStorage.getItem("football-formation")
 
@@ -159,7 +162,8 @@ export function TacticalBoard({ activeMembers }: Props) {
   }
 
   const handleChangeFormation = async (nextFormationId: string) => {
-    if (updatingPosition) return
+    if (isUpdatingRef.current) return
+    if (nextFormationId === formationId) return
 
     const nextFormation = FORMATIONS.find((formation) => formation.id === nextFormationId)
     if (!nextFormation) return
@@ -175,8 +179,11 @@ export function TacticalBoard({ activeMembers }: Props) {
     setFormationId(nextFormationId)
     window.localStorage.setItem("football-formation", nextFormationId)
 
-    // Các cầu thủ đang ở vị trí không thuộc sơ đồ mới sẽ được đưa về dự bị
+    // Nếu đổi sơ đồ nhưng không cần cập nhật DB thì không cần khóa loading
     if (playersNeedReset.length === 0) return
+
+    isUpdatingRef.current = true
+    setUpdatingPosition("formation")
 
     const beforeUpdate = members
 
@@ -187,8 +194,6 @@ export function TacticalBoard({ activeMembers }: Props) {
           : member
       )
     )
-
-    setUpdatingPosition("formation")
 
     try {
       await Promise.all(
@@ -210,12 +215,13 @@ export function TacticalBoard({ activeMembers }: Props) {
       window.localStorage.setItem("football-formation", previousFormationId)
       toast.error(error instanceof Error ? error.message : "Lỗi khi đổi sơ đồ")
     } finally {
+      isUpdatingRef.current = false
       setUpdatingPosition(null)
     }
   }
 
   const handleSelectPlayer = async (positionId: string, memberIdStr: string) => {
-    if (updatingPosition) return
+    if (isUpdatingRef.current) return
 
     const beforeUpdate = members
 
@@ -261,14 +267,15 @@ export function TacticalBoard({ activeMembers }: Props) {
       })
     }
 
+    const targetMemberId = selectedPlayer ? selectedPlayer.id : currentPlayer?.id
+
+    if (!targetMemberId) return
+
+    isUpdatingRef.current = true
     setMembers(nextMembers)
     setUpdatingPosition(positionId)
 
     try {
-      const targetMemberId = selectedPlayer ? selectedPlayer.id : currentPlayer?.id
-
-      if (!targetMemberId) return
-
       await apiFetch(`/api/members/${targetMemberId}`, {
         method: "PATCH",
         body: {
@@ -291,6 +298,7 @@ export function TacticalBoard({ activeMembers }: Props) {
       setMembers(beforeUpdate)
       toast.error(error instanceof Error ? error.message : "Lỗi khi cập nhật đội hình")
     } finally {
+      isUpdatingRef.current = false
       setUpdatingPosition(null)
     }
   }
@@ -336,6 +344,13 @@ export function TacticalBoard({ activeMembers }: Props) {
 
   return (
     <div className="rounded-2xl border border-white/5 bg-card/25 backdrop-blur-md p-6 space-y-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] relative overflow-hidden">
+      {isBoardUpdating && (
+        <div className="absolute inset-0 z-40 flex items-center justify-center rounded-2xl bg-background/55 backdrop-blur-[2px]">
+          <div className="rounded-xl border border-border bg-card px-4 py-2 text-xs font-bold text-foreground shadow">
+            Đang cập nhật đội hình...
+          </div>
+        </div>
+      )}
       <div className="flex items-center justify-between z-10 relative">
         <div className="space-y-1">
           <span className="text-xs font-mono tracking-widest text-muted-foreground uppercase flex items-center gap-1.5">
@@ -361,7 +376,7 @@ export function TacticalBoard({ activeMembers }: Props) {
           <SelectPrimitive.Root
             value={formationId}
             onValueChange={handleChangeFormation}
-            disabled={Boolean(updatingPosition)}
+            disabled={isBoardUpdating}
           >
             <SelectPrimitive.Trigger className="h-8 min-w-[120px] px-3 rounded-lg border border-primary/20 bg-primary/10 text-primary text-xs font-bold flex items-center justify-between gap-2 outline-none hover:bg-primary/15">
               <SelectPrimitive.Value placeholder="Chọn sơ đồ" />
@@ -429,7 +444,7 @@ export function TacticalBoard({ activeMembers }: Props) {
                   <SelectPrimitive.Root
                     value={currentPlayer ? currentPlayer.id.toString() : "none"}
                     onValueChange={(value) => handleSelectPlayer(pos.id, value)}
-                    disabled={Boolean(updatingPosition)}
+                    disabled={isBoardUpdating}
                   >
                     <SelectPrimitive.Trigger
                       className={cn(
@@ -437,7 +452,7 @@ export function TacticalBoard({ activeMembers }: Props) {
                         currentPlayer
                           ? "border-white bg-slate-800 text-white shadow-[0_0_12px_oklch(var(--primary)/0.4)]"
                           : "bg-white/95 border-slate-200 text-slate-500 hover:bg-slate-100 hover:text-slate-800 dark:bg-slate-900/95 dark:border-white/15 dark:text-white/40 dark:hover:bg-slate-800 dark:hover:text-white",
-                        updatingPosition === pos.id && "opacity-70 pointer-events-none"
+                        isBoardUpdating && "opacity-70 pointer-events-none"
                       )}
                     >
                       {currentPlayer ? (
@@ -537,14 +552,14 @@ export function TacticalBoard({ activeMembers }: Props) {
                       <SelectPrimitive.Root
                         value={currentPlayer ? currentPlayer.id.toString() : "none"}
                         onValueChange={(value) => handleSelectPlayer(pos.id, value)}
-                        disabled={Boolean(updatingPosition)}
+                        disabled={isBoardUpdating}
                       >
                         <SelectPrimitive.Trigger
                           className={cn(
                             "w-full h-8 px-2.5 rounded-lg border text-xs font-semibold flex items-center justify-between cursor-pointer outline-none bg-background border-border text-foreground hover:bg-muted transition-colors active-tactile",
                             currentPlayer &&
                               "border-emerald-500/30 bg-emerald-50 text-emerald-800 dark:border-primary/30 dark:bg-primary/10 dark:text-primary",
-                            updatingPosition === pos.id && "opacity-70 pointer-events-none"
+                            isBoardUpdating && "opacity-70 pointer-events-none"
                           )}
                         >
                           <SelectPrimitive.Value placeholder="-- Trống --" />

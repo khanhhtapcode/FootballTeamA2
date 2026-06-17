@@ -5,10 +5,34 @@ import { ScheduleDeleteButton } from "./_components/schedule-delete-button"
 import { format } from "date-fns"
 import { Calendar, MapPin, Trophy, FileText, Clock } from "lucide-react"
 import Image from "next/image"
+import { PeriodFilter } from "../_components/period-filter"
+import {
+  getPeriodLabel,
+  getSelectedPeriod,
+  type PeriodSearchParams,
+} from "@/lib/period-filter"
 
-export default async function SchedulePage() {
+export default async function SchedulePage({
+  searchParams,
+}: {
+  searchParams?: Promise<PeriodSearchParams>
+}) {
+  const resolvedSearchParams = await searchParams
+
+  const { mode, year, month, dateFilter } = getSelectedPeriod(resolvedSearchParams)
+
+  const periodLabel = getPeriodLabel(mode, year, month, "lịch thi đấu")
+
+  const scheduleWhere = dateFilter
+    ? {
+        date: dateFilter,
+      }
+    : {}
   const schedules = await db.schedule.findMany({
-    orderBy: { date: 'asc' }
+    where: scheduleWhere,
+    orderBy: {
+      date: "asc",
+    },
   })
 
   return (
@@ -29,12 +53,25 @@ export default async function SchedulePage() {
         </div>
       </div>
 
+      <PeriodFilter
+        mode={mode}
+        year={year}
+        month={month}
+        periodLabel={periodLabel}
+      />
+
       {/* Fixtures Grid */}
       {schedules.length === 0 ? (
         <div className="text-center py-20 text-muted-foreground border border-dashed rounded-2xl bg-card/15 backdrop-blur-md">
           <Calendar className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
-          <h3 className="text-lg font-bold text-foreground">Chưa có lịch thi đấu nào</h3>
-          <p className="text-sm mt-1">Hãy lên lịch trận đấu mới để chuẩn bị thể lực và nhân sự.</p>
+          <h3 className="text-lg font-bold text-foreground">
+            Chưa có lịch thi đấu nào
+          </h3>
+          <p className="text-sm mt-1">
+            {mode === "all"
+              ? "Hãy lên lịch trận đấu mới để chuẩn bị thể lực và nhân sự."
+              : "Không có lịch thi đấu nào trong khoảng thời gian đã chọn."}
+          </p>
         </div>
       ) : (
         <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
