@@ -1,6 +1,7 @@
 import { db } from "@/lib/db"
 import { ScheduleForm } from "./_components/schedule-form"
 import { ScheduleStatusSelect } from "./_components/schedule-status-select"
+import { ScheduleDeleteButton } from "./_components/schedule-delete-button"
 import { format } from "date-fns"
 import { Calendar, MapPin, Trophy, FileText, Clock } from "lucide-react"
 import Image from "next/image"
@@ -40,6 +41,15 @@ export default async function SchedulePage() {
           {schedules.map((schedule, index) => {
             const isConfirmed = schedule.status === "Đã xác nhận"
             const isCancelled = schedule.status === "Đã hủy"
+
+            const editSchedule = {
+              id: schedule.id,
+              date: schedule.date.toISOString(),
+              opponent: schedule.opponent,
+              location: schedule.location,
+              status: schedule.status,
+              notes: schedule.notes,
+            }
 
             return (
               <div 
@@ -110,10 +120,23 @@ export default async function SchedulePage() {
                   )}
                 </div>
 
-                {/* Edit state action */}
-                <div className="flex items-center justify-between mt-5 pt-3 border-t border-border/40">
-                  <span className="text-[10px] uppercase font-black tracking-wider text-muted-foreground">Trạng thái:</span>
-                  <ScheduleStatusSelect id={schedule.id} currentStatus={schedule.status} />
+                {/* Actions */}
+                <div className="mt-5 pt-3 border-t border-border/40 space-y-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-[10px] uppercase font-black tracking-wider text-muted-foreground">
+                      Trạng thái:
+                    </span>
+
+                    <ScheduleStatusSelect id={schedule.id} currentStatus={schedule.status} />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <ScheduleForm schedule={editSchedule} />
+                    <ScheduleDeleteButton
+                      scheduleId={schedule.id}
+                      opponent={schedule.opponent}
+                    />
+                  </div>
                 </div>
               </div>
             )
