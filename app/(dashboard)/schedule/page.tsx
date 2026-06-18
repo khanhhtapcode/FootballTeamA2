@@ -1,13 +1,38 @@
 import { db } from "@/lib/db"
 import { ScheduleForm } from "./_components/schedule-form"
 import { ScheduleStatusSelect } from "./_components/schedule-status-select"
+import { ScheduleDeleteButton } from "./_components/schedule-delete-button"
 import { format } from "date-fns"
 import { Calendar, MapPin, Trophy, FileText, Clock } from "lucide-react"
 import Image from "next/image"
+import { PeriodFilter } from "../_components/period-filter"
+import {
+  getPeriodLabel,
+  getSelectedPeriod,
+  type PeriodSearchParams,
+} from "@/lib/period-filter"
 
-export default async function SchedulePage() {
+export default async function SchedulePage({
+  searchParams,
+}: {
+  searchParams?: Promise<PeriodSearchParams>
+}) {
+  const resolvedSearchParams = await searchParams
+
+  const { mode, year, month, dateFilter } = getSelectedPeriod(resolvedSearchParams)
+
+  const periodLabel = getPeriodLabel(mode, year, month, "lịch thi đấu")
+
+  const scheduleWhere = dateFilter
+    ? {
+        date: dateFilter,
+      }
+    : {}
   const schedules = await db.schedule.findMany({
-    orderBy: { date: 'asc' }
+    where: scheduleWhere,
+    orderBy: {
+      date: "asc",
+    },
   })
 
   return (
@@ -28,18 +53,40 @@ export default async function SchedulePage() {
         </div>
       </div>
 
+      <PeriodFilter
+        mode={mode}
+        year={year}
+        month={month}
+        periodLabel={periodLabel}
+      />
+
       {/* Fixtures Grid */}
       {schedules.length === 0 ? (
         <div className="text-center py-20 text-muted-foreground border border-dashed rounded-2xl bg-card/15 backdrop-blur-md">
           <Calendar className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
-          <h3 className="text-lg font-bold text-foreground">Chưa có lịch thi đấu nào</h3>
-          <p className="text-sm mt-1">Hãy lên lịch trận đấu mới để chuẩn bị thể lực và nhân sự.</p>
+          <h3 className="text-lg font-bold text-foreground">
+            Chưa có lịch thi đấu nào
+          </h3>
+          <p className="text-sm mt-1">
+            {mode === "all"
+              ? "Hãy lên lịch trận đấu mới để chuẩn bị thể lực và nhân sự."
+              : "Không có lịch thi đấu nào trong khoảng thời gian đã chọn."}
+          </p>
         </div>
       ) : (
         <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
           {schedules.map((schedule, index) => {
             const isConfirmed = schedule.status === "Đã xác nhận"
             const isCancelled = schedule.status === "Đã hủy"
+
+            const editSchedule = {
+              id: schedule.id,
+              date: schedule.date.toISOString(),
+              opponent: schedule.opponent,
+              location: schedule.location,
+              status: schedule.status,
+              notes: schedule.notes,
+            }
 
             return (
               <div 
@@ -110,10 +157,23 @@ export default async function SchedulePage() {
                   )}
                 </div>
 
-                {/* Edit state action */}
-                <div className="flex items-center justify-between mt-5 pt-3 border-t border-border/40">
-                  <span className="text-[10px] uppercase font-black tracking-wider text-muted-foreground">Trạng thái:</span>
-                  <ScheduleStatusSelect id={schedule.id} currentStatus={schedule.status} />
+                {/* Actions */}
+                <div className="mt-5 pt-3 border-t border-border/40 space-y-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-[10px] uppercase font-black tracking-wider text-muted-foreground">
+                      Trạng thái:
+                    </span>
+
+                    <ScheduleStatusSelect id={schedule.id} currentStatus={schedule.status} />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <ScheduleForm schedule={editSchedule} />
+                    <ScheduleDeleteButton
+                      scheduleId={schedule.id}
+                      opponent={schedule.opponent}
+                    />
+                  </div>
                 </div>
               </div>
             )

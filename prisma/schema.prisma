@@ -17,9 +17,11 @@ model Member {
   status       String        @default("Hoạt động") // Hoạt động, Tạm nghỉ, Giải nghệ
   notes        String?
   lineupPosition String?
+  avatarUrl      String?
   
   fundRecords  FundRecord[]
   jerseyOrders JerseyOrder[]
+  matchStats   PlayerMatchStat[]
   
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
@@ -38,19 +40,20 @@ model FundRecord {
 }
 
 model Match {
-  id             Int       @id @default(autoincrement())
-  date           DateTime
-  opponent       String
-  location       String?
-  score          String?
-  result         String    // Thắng, Hòa, Thua
-  playersCount   Int
-  pitchFee       Int       @default(0)
-  scorers        String?   // comma separated or JSON
-  notes          String?
-  
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  id           Int               @id @default(autoincrement())
+  date         DateTime
+  opponent     String
+  location     String?
+  score        String?
+  result       String
+  playersCount Int
+  pitchFee     Int               @default(0)
+  scorers      String?
+  notes        String?
+  playerStats  PlayerMatchStat[]
+  expense      Expense?
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
 }
 
 model Expense {
@@ -62,6 +65,8 @@ model Expense {
   spender        String?
   source         String    // Quỹ đội, Tự túc, Tài trợ
   notes          String?
+  matchId     Int?     @unique
+  match       Match?   @relation(fields: [matchId], references: [id], onDelete: Cascade)
   
   createdAt      DateTime  @default(now())
 }
@@ -94,4 +99,18 @@ model Schedule {
   
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
+}
+
+model PlayerMatchStat {
+  id        Int     @id @default(autoincrement())
+  matchId   Int
+  memberId  Int
+  goals     Int     @default(0) // Số bàn thắng
+  assists   Int     @default(0) // Số kiến tạo
+
+  match     Match   @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  member    Member  @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  // Đảm bảo mỗi thành viên chỉ có 1 bản ghi thống kê cho mỗi trận
+  @@unique([matchId, memberId])
 }

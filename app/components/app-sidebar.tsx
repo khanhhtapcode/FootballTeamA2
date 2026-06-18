@@ -13,6 +13,7 @@ import {
   Calendar,
   Shirt,
   LogOut,
+  Flame, // 1. Đã thêm import icon Flame ở đây
 } from "lucide-react"
 
 import {
@@ -31,6 +32,7 @@ const navItems = [
   { title: "Thành viên", url: "/members", icon: Users },
   { title: "Quỹ đội", url: "/funds", icon: Wallet },
   { title: "Lịch sử trận đấu", url: "/matches", icon: Trophy },
+  { title: "Bảng Phong Độ", url: "/stats", icon: Flame }, // 2. Đã thêm menu thống kê vào đây
   { title: "Chi phí", url: "/expenses", icon: Receipt },
   { title: "Lịch thi đấu", url: "/schedule", icon: Calendar },
   { title: "Thu tiền áo", url: "/jerseys", icon: Shirt },

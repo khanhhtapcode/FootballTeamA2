@@ -13,9 +13,9 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Plus, CalendarDays, CalendarIcon } from "lucide-react"
+import { Plus, CalendarDays, CalendarIcon, Pencil } from "lucide-react"
 import { apiFetch } from "@/lib/api-client"
-import { useState, useTransition } from "react"
+import { useEffect, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
@@ -23,27 +23,81 @@ import { Calendar } from "@/components/ui/calendar"
 import { format } from "date-fns"
 import { cn } from "@/lib/utils"
 
-export function ScheduleForm() {
+type ScheduleFormData = {
+  id: number
+  date: string
+  opponent: string
+  location: string | null
+  status: string
+  notes: string | null
+}
+
+function getInitialDate(schedule?: ScheduleFormData) {
+  if (!schedule?.date) return new Date()
+
+  const parsedDate = new Date(schedule.date)
+
+  if (Number.isNaN(parsedDate.getTime())) {
+    return new Date()
+  }
+
+  return parsedDate
+}
+
+function getInitialTime(schedule?: ScheduleFormData) {
+  if (!schedule?.date) return "18:00"
+
+  const parsedDate = new Date(schedule.date)
+
+  if (Number.isNaN(parsedDate.getTime())) {
+    return "18:00"
+  }
+
+  return format(parsedDate, "HH:mm")
+}
+
+export function ScheduleForm({ schedule }: { schedule?: ScheduleFormData }) {
   const [open, setOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
-  const [date, setDate] = useState<Date>(new Date())
-  const [time, setTime] = useState<string>("18:00")
+  const [date, setDate] = useState<Date>(getInitialDate(schedule))
+  const [time, setTime] = useState<string>(getInitialTime(schedule))
   const router = useRouter()
+  const isEdit = !!schedule
+
+  useEffect(() => {
+    if (open) {
+      setDate(getInitialDate(schedule))
+      setTime(getInitialTime(schedule))
+    }
+  }, [open, schedule])
 
   async function onSubmit(formData: FormData) {
     startTransition(async () => {
       try {
-        await apiFetch("/api/schedules", {
-          method: "POST",
-          body: {
-            date: formData.get("date"),
-            opponent: formData.get("opponent"),
-            location: formData.get("location"),
-            status: formData.get("status"),
-            notes: formData.get("notes"),
-          },
-        })
-        toast.success("Thêm lịch thi đấu thành công")
+        const payload = {
+          date: formData.get("date"),
+          opponent: formData.get("opponent"),
+          location: formData.get("location"),
+          status: formData.get("status"),
+          notes: formData.get("notes"),
+        }
+
+        if (isEdit) {
+          await apiFetch(`/api/schedules/${schedule.id}`, {
+            method: "PUT",
+            body: payload,
+          })
+
+          toast.success("Cập nhật lịch thi đấu thành công")
+        } else {
+          await apiFetch("/api/schedules", {
+            method: "POST",
+            body: payload,
+          })
+
+          toast.success("Thêm lịch thi đấu thành công")
+        }
+
         setOpen(false)
         router.refresh()
       } catch (error) {
@@ -55,19 +109,32 @@ export function ScheduleForm() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger render={
-        <Button className="cursor-pointer bg-primary hover:bg-primary/95 text-primary-foreground font-bold hover-lift shadow-sm">
-          <Plus className="mr-2 h-4 w-4" />
-          Thêm lịch thi đấu
-        </Button>
+        isEdit ? (
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full h-9 text-xs font-bold border-blue-500/20 text-blue-500 hover:bg-blue-500/10"
+          >
+            <Pencil className="w-3.5 h-3.5 mr-1.5" />
+            Sửa
+          </Button>
+        ) : (
+          <Button className="cursor-pointer bg-primary hover:bg-primary/95 text-primary-foreground font-bold hover-lift shadow-sm">
+            <Plus className="mr-2 h-4 w-4" />
+            Thêm lịch thi đấu
+          </Button>
+        )
       } />
-      <DialogContent className="sm:max-w-[450px] glass-panel border border-border">
+      <DialogContent className="sm:max-w-112.5 glass-panel border border-border">
         <DialogHeader className="space-y-1">
           <div className="flex items-center gap-2 text-primary font-bold">
             <CalendarDays className="w-5 h-5" />
-            <DialogTitle className="font-heading">Lên lịch thi đấu</DialogTitle>
+            <DialogTitle className="font-heading">
+              {isEdit ? "Cập nhật lịch thi đấu" : "Lên lịch thi đấu"}
+            </DialogTitle>
           </div>
           <DialogDescription className="text-muted-foreground text-xs">
-            Điền thông tin trận đấu sắp tới của đội bóng.
+            {isEdit ? "Chỉnh sửa thông tin lịch thi đấu của đội bóng." : "Điền thông tin trận đấu sắp tới của đội bóng."}
           </DialogDescription>
         </DialogHeader>
         <form action={onSubmit}>
@@ -118,6 +185,7 @@ export function ScheduleForm() {
               <Input 
                 id="opponent" 
                 name="opponent" 
+                defaultValue={schedule?.opponent || ""}
                 placeholder="Tên đội đối thủ"
                 className="col-span-3 h-10 border-border bg-background/50 focus:border-primary focus:ring-primary/20" 
                 required 
@@ -129,6 +197,7 @@ export function ScheduleForm() {
               <Input 
                 id="location" 
                 name="location" 
+                defaultValue={schedule?.location || ""}
                 placeholder="VD: Sân cỏ nhân tạo A2"
                 className="col-span-3 h-10 border-border bg-background/50 focus:border-primary focus:ring-primary/20" 
               />
@@ -137,7 +206,7 @@ export function ScheduleForm() {
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="status" className="text-right text-sm font-semibold">Trạng thái <span className="text-red-500">*</span></Label>
               <div className="col-span-3">
-                <Select name="status" required defaultValue="Chờ xác nhận">
+                <Select name="status" required defaultValue={schedule?.status || "Chờ xác nhận"}>
                   <SelectTrigger className="h-10 border-border bg-background/50 focus:border-primary cursor-pointer">
                     <SelectValue placeholder="Trạng thái" />
                   </SelectTrigger>
@@ -155,6 +224,7 @@ export function ScheduleForm() {
               <Input 
                 id="notes" 
                 name="notes" 
+                defaultValue={schedule?.notes || ""}
                 placeholder="VD: Mang áo màu đỏ"
                 className="col-span-3 h-10 border-border bg-background/50 focus:border-primary focus:ring-primary/20" 
               />
@@ -166,7 +236,7 @@ export function ScheduleForm() {
               className="cursor-pointer bg-primary hover:bg-primary/95 text-primary-foreground font-bold h-10 w-full sm:w-auto hover-lift"
               disabled={isPending}
             >
-              {isPending ? "Đang lưu..." : "Lưu lịch thi đấu"}
+              {isPending ? "Đang lưu..." : isEdit ? "Cập nhật" : "Lưu lịch thi đấu"}
             </Button>
           </DialogFooter>
         </form>
