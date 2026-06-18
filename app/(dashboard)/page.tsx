@@ -33,7 +33,7 @@ export default async function DashboardPage({
 }) {
   const resolvedSearchParams = await searchParams
 
-  const { mode, year: selectedYear, month: selectedMonth, dateFilter } =
+  const { mode, year: selectedYear, month: selectedMonth, quarter: selectedQuarter, from: selectedFrom, to: selectedTo, dateFilter } =
     getSelectedPeriod(resolvedSearchParams)
 
   const matchWhere = dateFilter
@@ -51,17 +51,24 @@ export default async function DashboardPage({
         source: EXPENSE_SOURCE.TEAM_FUND,
       }
 
+  const quarterMonths = [
+    (selectedQuarter - 1) * 3 + 1,
+    (selectedQuarter - 1) * 3 + 2,
+    (selectedQuarter - 1) * 3 + 3,
+  ]
+
   const fundWhere =
-    mode === "year"
+    mode === "month"
       ? {
           status: FUND_STATUS.PAID,
           year: selectedYear,
+          month: selectedMonth,
         }
-      : mode === "month"
+      : mode === "quarter"
         ? {
             status: FUND_STATUS.PAID,
             year: selectedYear,
-            month: selectedMonth,
+            month: { in: quarterMonths },
           }
         : {
             status: FUND_STATUS.PAID,
@@ -77,7 +84,7 @@ export default async function DashboardPage({
         },
       }
 
-  const periodLabel = getPeriodLabel(mode, selectedYear, selectedMonth, "thống kê")
+  const periodLabel = getPeriodLabel(mode, selectedYear, selectedMonth, "thống kê", selectedQuarter, selectedFrom, selectedTo)
 
   const [
     [membersCount, winsCount, totalMatches, expenseAgg, paidFundCount],
@@ -209,6 +216,9 @@ export default async function DashboardPage({
         mode={mode}
         year={selectedYear}
         month={selectedMonth}
+        quarter={selectedQuarter}
+        from={selectedFrom}
+        to={selectedTo}
         periodLabel={periodLabel}
       />
 
@@ -230,7 +240,7 @@ export default async function DashboardPage({
             </div>
 
             <p className="text-[10px] text-muted-foreground">
-              {mode === "all" ? "Số dư khả dụng hiện tại" : periodLabel}
+              {periodLabel}
             </p>
           </div>
 
@@ -274,9 +284,7 @@ export default async function DashboardPage({
             </div>
 
             <p className="text-[10px] text-muted-foreground">
-              {mode === "all"
-                ? "Số trận thi đấu sắp diễn ra"
-                : "Số trận trong kỳ thống kê"}
+              {"Số trận trong kỳ thống kê"}
             </p>
           </div>
 
@@ -342,9 +350,7 @@ export default async function DashboardPage({
           <div className="rounded-2xl border border-white/5 bg-card/20 backdrop-blur-md p-6 space-y-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
             <div className="flex items-center justify-between">
               <span className="text-xs font-mono tracking-widest text-muted-foreground uppercase">
-                {mode === "all"
-                  ? "// LỊCH THI ĐẤU TIẾP THEO"
-                  : "// LỊCH THI ĐẤU TRONG KỲ"}
+                {"// LỊCH THI ĐẤU TRONG KỲ"}
               </span>
 
               <Link
@@ -422,9 +428,7 @@ export default async function DashboardPage({
           <div className="rounded-2xl border border-white/5 bg-card/20 backdrop-blur-md p-6 space-y-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
             <div className="flex items-center justify-between">
               <span className="text-xs font-mono tracking-widest text-muted-foreground uppercase">
-                {mode === "all"
-                  ? "// KẾT QUẢ ĐỐI ĐẦU MỚI NHẤT"
-                  : "// KẾT QUẢ ĐỐI ĐẦU TRONG KỲ"}
+                {"// KẾT QUẢ ĐỐI ĐẦU TRONG KỲ"}
               </span>
 
               <Link
@@ -498,7 +502,7 @@ export default async function DashboardPage({
           {/* Top Scorers */}
           <div className="rounded-2xl border border-white/5 bg-card/20 backdrop-blur-md p-6 space-y-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
             <span className="text-xs font-mono tracking-widest text-muted-foreground uppercase block border-b border-border/40 pb-2">
-              {mode === "all" ? "// VUA PHÁ LƯỚI" : "// VUA PHÁ LƯỚI TRONG KỲ"}
+              {"// VUA PHÁ LƯỚI TRONG KỲ"}
             </span>
 
             {topScorers.length === 0 ? (

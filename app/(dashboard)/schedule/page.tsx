@@ -19,9 +19,9 @@ export default async function SchedulePage({
 }) {
   const resolvedSearchParams = await searchParams
 
-  const { mode, year, month, dateFilter } = getSelectedPeriod(resolvedSearchParams)
+  const { mode, year, month, quarter, from, to, dateFilter } = getSelectedPeriod(resolvedSearchParams)
 
-  const periodLabel = getPeriodLabel(mode, year, month, "lịch thi đấu")
+  const periodLabel = getPeriodLabel(mode, year, month, "lịch thi đấu", quarter, from, to)
 
   const scheduleWhere = dateFilter
     ? {
@@ -57,6 +57,9 @@ export default async function SchedulePage({
         mode={mode}
         year={year}
         month={month}
+        quarter={quarter}
+        from={from}
+        to={to}
         periodLabel={periodLabel}
       />
 
@@ -68,9 +71,7 @@ export default async function SchedulePage({
             Chưa có lịch thi đấu nào
           </h3>
           <p className="text-sm mt-1">
-            {mode === "all"
-              ? "Hãy lên lịch trận đấu mới để chuẩn bị thể lực và nhân sự."
-              : "Không có lịch thi đấu nào trong khoảng thời gian đã chọn."}
+            {"Không có lịch thi đấu nào trong khoảng thời gian đã chọn."}
           </p>
         </div>
       ) : (

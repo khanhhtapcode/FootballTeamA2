@@ -26,9 +26,9 @@ export default async function MatchesPage({
 }) {
   const resolvedSearchParams = await searchParams
 
-  const { mode, year, month, dateFilter } = getSelectedPeriod(resolvedSearchParams)
+  const { mode, year, month, quarter, from, to, dateFilter } = getSelectedPeriod(resolvedSearchParams)
 
-  const periodLabel = getPeriodLabel(mode, year, month, "trận đấu")
+  const periodLabel = getPeriodLabel(mode, year, month, "trận đấu", quarter, from, to)
 
   const matchWhere = dateFilter
     ? {
@@ -91,6 +91,9 @@ export default async function MatchesPage({
         mode={mode}
         year={year}
         month={month}
+        quarter={quarter}
+        from={from}
+        to={to}
         periodLabel={periodLabel}
       />
 
@@ -102,9 +105,7 @@ export default async function MatchesPage({
             Chưa có kết quả trận đấu
           </h3>
           <p className="text-sm mt-1">
-            {mode === "all"
-              ? "Hãy thêm kết quả trận đấu giao hữu đầu tiên!"
-              : "Không có trận đấu nào trong khoảng thời gian đã chọn."}
+            {"Không có trận đấu nào trong khoảng thời gian đã chọn."}
           </p>
         </div>
       ) : (
