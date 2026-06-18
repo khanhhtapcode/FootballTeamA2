@@ -15,6 +15,12 @@ export const MEMBER_STATUS = {
   RETIRED: "Giải nghệ",
 } as const
 
+// Nguồn chi phí
+export const EXPENSE_SOURCE = {
+  TEAM_FUND: "Quỹ đội",
+  PERSONAL: "Cá nhân",
+} as const
+
 // Vị trí thi đấu
 export const MEMBER_POSITIONS = ["Tất cả", "Thủ môn", "Hậu vệ", "Tiền vệ", "Tiền đạo", "Đa năng"] as const
 

@@ -18,8 +18,18 @@ import { apiFetch } from "@/lib/api-client"
 import { useState, useTransition, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
+import Image from "next/image"
 
-export function MemberForm({ member }: { member?: any }) {
+type MemberData = {
+  id: number
+  fullName: string
+  position: string | null
+  jerseyNumber: number | null
+  phone: string | null
+  avatarUrl: string | null
+}
+
+export function MemberForm({ member }: { member?: MemberData }) {
   const [open, setOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
   const router = useRouter()
@@ -31,7 +41,9 @@ export function MemberForm({ member }: { member?: any }) {
   // Cập nhật lại preview mỗi khi mở/đóng form
   useEffect(() => {
     if (open) {
-      setPreview(member?.avatarUrl || null)
+      startTransition(() => {
+        setPreview(member?.avatarUrl || null)
+      })
     }
   }, [open, member])
 
@@ -165,7 +177,7 @@ export function MemberForm({ member }: { member?: any }) {
             <div className="flex flex-col items-center justify-center gap-2 mb-2">
               <div className="relative w-20 h-20 rounded-full border-2 border-dashed border-primary/50 flex items-center justify-center overflow-hidden bg-muted/50">
                 {preview ? (
-                  <img src={preview} alt="Preview" className="w-full h-full object-cover" />
+                  <Image src={preview} alt="Preview" fill className="object-cover" unoptimized />
                 ) : (
                   <Upload className="w-6 h-6 text-muted-foreground/50" />
                 )}

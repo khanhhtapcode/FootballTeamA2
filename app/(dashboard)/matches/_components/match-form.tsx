@@ -66,13 +66,15 @@ export function MatchForm({ match }: { match?: MatchFormData }) {
   const router = useRouter()
   const isEdit = !!match
 
-    // State lưu danh sách thành viên lấy từ API
-  const [members, setMembers] = useState<{
+  type MemberOption = {
     id: number
     fullName: string
     jerseyNumber: number | null
     position: string | null
-  }[]>([])
+  }
+
+    // State lưu danh sách thành viên lấy từ API
+  const [members, setMembers] = useState<MemberOption[]>([])
 
   // State lưu danh sách thống kê cầu thủ đang nhập
   const [playerStats, setPlayerStats] = useState<PlayerStatInput[]>([])
@@ -83,10 +85,10 @@ export function MatchForm({ match }: { match?: MatchFormData }) {
   // Load danh sách thành viên khi mở form
   useEffect(() => {
     if (open && members.length === 0) {
-      apiFetch("/api/members").then((data: any) => {
-        // Tuỳ vào cách API của bạn trả về (có thể là data trực tiếp hoặc data.data)
-        const memberList = Array.isArray(data) ? data : (data.data || []);
-        setMembers(memberList);
+      apiFetch("/api/members").then((data: unknown) => {
+        const arr = data as { data?: unknown[] } | unknown[]
+        const memberList = Array.isArray(arr) ? arr : ((arr as { data?: unknown[] }).data || []);
+        setMembers(memberList as MemberOption[]);
       }).catch(err => console.error("Lỗi tải thành viên", err));
     }
   }, [open, members.length])
@@ -94,16 +96,18 @@ export function MatchForm({ match }: { match?: MatchFormData }) {
   // Reset form khi đóng/mở
   useEffect(() => {
     if (open) {
-      setDate(match?.date ? new Date(match.date) : new Date())
-      setExpenseSource(match?.expenseSource || "Quỹ đội")
+      startTransition(() => {
+        setDate(match?.date ? new Date(match.date) : new Date())
+        setExpenseSource(match?.expenseSource || "Quỹ đội")
 
-      setPlayerStats(
-        match?.playerStats?.map((stat) => ({
-          memberId: stat.member.id.toString(),
-          goals: stat.goals,
-          assists: stat.assists,
-        })) || []
-      )
+        setPlayerStats(
+          match?.playerStats?.map((stat) => ({
+            memberId: stat.member.id.toString(),
+            goals: stat.goals,
+            assists: stat.assists,
+          })) || []
+        )
+      })
     }
   }, [open, match])
 
@@ -324,7 +328,7 @@ export function MatchForm({ match }: { match?: MatchFormData }) {
                 <Select
                   name="expenseSource"
                   value={expenseSource}
-                  onValueChange={setExpenseSource}
+                  onValueChange={(val) => val && setExpenseSource(val)}
                 >
                   <SelectTrigger className="h-10 border-border bg-background/50">
                     <SelectValue placeholder="Chọn nguồn trả phí sân" />
@@ -408,7 +412,7 @@ export function MatchForm({ match }: { match?: MatchFormData }) {
                   <div key={index} className="flex gap-2 items-center">
                     <Select
                       value={stat.memberId}
-                      onValueChange={(val) => updateStatRow(index, "memberId", val)}
+                      onValueChange={(val) => val && updateStatRow(index, "memberId", val)}
                     >
                       <SelectTrigger className="w-45 h-9 bg-background/50">
                         <span
@@ -455,7 +459,7 @@ export function MatchForm({ match }: { match?: MatchFormData }) {
                 ))}
                 {playerStats.length === 0 && (
                   <p className="text-xs text-muted-foreground italic text-center py-2 bg-background/30 rounded-md border border-dashed border-border">
-                    Chưa có thống kê nào. Nhấn "Thêm cầu thủ" để nhập.
+                    Chưa có thống kê nào. Nhấn &quot;Thêm cầu thủ&quot; để nhập.
                   </p>
                 )}
               </div>

@@ -66,8 +66,10 @@ export function ExpenseForm({
 
   useEffect(() => {
     if (open) {
-      setDate(expense?.date ? new Date(expense.date) : new Date())
-      setSource(expense?.source || "Quỹ đội")
+      startTransition(() => {
+        setDate(expense?.date ? new Date(expense.date) : new Date())
+        setSource(expense?.source || "Quỹ đội")
+      })
     }
   }, [open, expense])
 
@@ -273,7 +275,7 @@ export function ExpenseForm({
                   name="source"
                   required
                   value={source}
-                  onValueChange={setSource}
+                  onValueChange={(val) => val && setSource(val)}
                 >
                   <SelectTrigger className="h-10 border-border bg-background/50 focus:border-primary cursor-pointer">
                     <SelectValue placeholder="Chọn nguồn tiền" />

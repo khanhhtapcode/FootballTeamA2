@@ -1,63 +1,47 @@
-"use client"
-
-import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Trophy, Medal, Flame, User } from "lucide-react"
-import { apiFetch } from "@/lib/api-client"
 import Image from "next/image"
+import { getMonthlyPlayerStats } from "@/lib/services/stat-service"
+import { StatsFilter } from "./_components/stats-filter"
 
-// Định nghĩa kiểu dữ liệu trả về từ API
-type PlayerStat = {
-  id: number;
-  fullName: string;
-  position: string | null;
-  jerseyNumber: number | null;
-  avatarUrl: string | null
-  totalGoals: number;
-  totalAssists: number;
+type StatsSearchParams = {
+  month?: string
+  year?: string
 }
 
-export default function StatsPage() {
+// Hàm render icon xếp hạng (Top 1, 2, 3)
+function renderRankIcon(index: number) {
+  if (index === 0) return <Trophy className="w-5 h-5 text-yellow-500 mx-auto" />
+  if (index === 1) return <Medal className="w-5 h-5 text-gray-400 mx-auto" />
+  if (index === 2) return <Medal className="w-5 h-5 text-amber-600 mx-auto" />
+  return <span className="font-semibold text-muted-foreground">{index + 1}</span>
+}
+
+export default async function StatsPage({
+  searchParams,
+}: {
+  searchParams?: Promise<StatsSearchParams>
+}) {
+  const resolvedSearchParams = await searchParams
+
   const currentDate = new Date()
-  const [month, setMonth] = useState<string>((currentDate.getMonth() + 1).toString())
-  const [year, setYear] = useState<string>(currentDate.getFullYear().toString())
-  const [stats, setStats] = useState<PlayerStat[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+  const currentMonth = currentDate.getMonth() + 1
+  const currentYear = currentDate.getFullYear()
 
-  // Hàm gọi API lấy dữ liệu
-  const fetchStats = async (selectedMonth: string, selectedYear: string) => {
-    setIsLoading(true)
-    try {
-      const data = await apiFetch(`/api/stats/monthly?month=${selectedMonth}&year=${selectedYear}`)
-      setStats(data as PlayerStat[])
-    } catch (error) {
-      console.error("Lỗi khi lấy thống kê:", error)
-    } finally {
-      setIsLoading(false)
-    }
-  }
+  const parsedMonth = Number(resolvedSearchParams?.month)
+  const month =
+    Number.isInteger(parsedMonth) && parsedMonth >= 1 && parsedMonth <= 12
+      ? parsedMonth
+      : currentMonth
 
-  // Tự động gọi lại API mỗi khi thay đổi tháng hoặc năm
-  useEffect(() => {
-    fetchStats(month, year)
-  }, [month, year])
+  const parsedYear = Number(resolvedSearchParams?.year)
+  const year =
+    Number.isInteger(parsedYear) && parsedYear >= 2000 && parsedYear <= 2100
+      ? parsedYear
+      : currentYear
 
-  // Tạo mảng năm (ví dụ: từ năm ngoái đến năm sau)
-  const years = [
-    (currentDate.getFullYear() - 1).toString(),
-    currentDate.getFullYear().toString(),
-    (currentDate.getFullYear() + 1).toString(),
-  ]
-
-  // Hàm render icon xếp hạng (Top 1, 2, 3)
-  const renderRankIcon = (index: number) => {
-    if (index === 0) return <Trophy className="w-5 h-5 text-yellow-500 mx-auto" />
-    if (index === 1) return <Medal className="w-5 h-5 text-gray-400 mx-auto" />
-    if (index === 2) return <Medal className="w-5 h-5 text-amber-600 mx-auto" />
-    return <span className="font-semibold text-muted-foreground">{index + 1}</span>
-  }
+  const stats = await getMonthlyPlayerStats(month, year)
 
   return (
     <div className="space-y-6">
@@ -71,29 +55,7 @@ export default function StatsPage() {
         </div>
 
         {/* Bộ lọc Tháng & Năm */}
-        <div className="flex items-center gap-3">
-          <Select value={month} onValueChange={setMonth}>
-            <SelectTrigger className="w-[120px] bg-background">
-              <SelectValue placeholder="Chọn tháng" />
-            </SelectTrigger>
-            <SelectContent>
-              {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
-                <SelectItem key={m} value={m.toString()}>Tháng {m}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <Select value={year} onValueChange={setYear}>
-            <SelectTrigger className="w-[100px] bg-background">
-              <SelectValue placeholder="Chọn năm" />
-            </SelectTrigger>
-            <SelectContent>
-              {years.map((y) => (
-                <SelectItem key={y} value={y}>{y}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        <StatsFilter month={month} year={year} />
       </div>
 
       <Card className="glass-panel border-border">
@@ -115,13 +77,7 @@ export default function StatsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {isLoading ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center h-32 text-muted-foreground">
-                      Đang tải dữ liệu...
-                    </TableCell>
-                  </TableRow>
-                ) : stats.length === 0 ? (
+                {stats.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={6} className="text-center h-32 text-muted-foreground">
                       Không có dữ liệu ghi bàn/kiến tạo nào trong tháng này.

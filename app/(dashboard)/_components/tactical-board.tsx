@@ -128,18 +128,15 @@ export function TacticalBoard({ activeMembers }: Props) {
 
   const [members, setMembers] = React.useState<Member[]>(activeMembers)
   const [updatingPosition, setUpdatingPosition] = React.useState<string | null>(null)
-  const [formationId, setFormationId] = React.useState("3-2-1")
+  const [formationId, setFormationId] = React.useState(() => {
+    if (typeof window === "undefined") return "3-2-1"
+    const saved = window.localStorage.getItem("football-formation")
+    return saved && FORMATIONS.some((f) => f.id === saved) ? saved : "3-2-1"
+  })
+  const [, startSyncTransition] = React.useTransition()
 
   const isUpdatingRef = React.useRef(false)
   const isBoardUpdating = updatingPosition !== null
-
-  React.useEffect(() => {
-    const savedFormation = window.localStorage.getItem("football-formation")
-
-    if (savedFormation && FORMATIONS.some((formation) => formation.id === savedFormation)) {
-      setFormationId(savedFormation)
-    }
-  }, [])
 
   const currentFormation =
     FORMATIONS.find((formation) => formation.id === formationId) || FORMATIONS[0]
@@ -147,7 +144,9 @@ export function TacticalBoard({ activeMembers }: Props) {
   const POSITIONS = currentFormation.positions
 
   React.useEffect(() => {
-    setMembers(activeMembers)
+    startSyncTransition(() => {
+      setMembers(activeMembers)
+    })
   }, [activeMembers])
 
   const getLineupLabel = (positionId: string | null) => {
@@ -161,7 +160,8 @@ export function TacticalBoard({ activeMembers }: Props) {
     return positionId   
   }
 
-  const handleChangeFormation = async (nextFormationId: string) => {
+  const handleChangeFormation = async (nextFormationId: string | null) => {
+    if (!nextFormationId) return
     if (isUpdatingRef.current) return
     if (nextFormationId === formationId) return
 
@@ -220,7 +220,8 @@ export function TacticalBoard({ activeMembers }: Props) {
     }
   }
 
-  const handleSelectPlayer = async (positionId: string, memberIdStr: string) => {
+  const handleSelectPlayer = async (positionId: string, memberIdStr: string | null) => {
+    if (!memberIdStr) return
     if (isUpdatingRef.current) return
 
     const beforeUpdate = members

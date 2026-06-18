@@ -66,8 +66,10 @@ export function ScheduleForm({ schedule }: { schedule?: ScheduleFormData }) {
 
   useEffect(() => {
     if (open) {
-      setDate(getInitialDate(schedule))
-      setTime(getInitialTime(schedule))
+      startTransition(() => {
+        setDate(getInitialDate(schedule))
+        setTime(getInitialTime(schedule))
+      })
     }
   }, [open, schedule])
 
